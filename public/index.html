@@ -1,34 +1,179 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blackjack Mini App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #0b0b0b;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: #161616;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.05);
+    }
+
+    .balance {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .bet-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    input[type="number"] {
+      width: 100px;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    button {
+      background: #1f8b4c;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .cards {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .card {
+      width: 60px;
+      height: 90px;
+      background: white;
+      color: black;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .section-title {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 18px;
+      min-height: 24px;
+    }
+  </style>
 </head>
+<body>
+  <div class="container">
+    <h1>🃏 Blackjack Mini App</h1>
+    <p id="user">Загрузка...</p>
 
-<body style="background:#111;color:white;font-family:sans-serif;text-align:center;padding:40px;">
+    <div class="panel">
+      <div class="balance">Баланс: <span id="balance">1000</span></div>
 
-  <h1>🃏 Blackjack Mini App</h1>
-  <p id="user"></p>
+      <div class="bet-row">
+        <input type="number" id="bet" value="50" min="1">
+        <button id="newGameBtn">Новая игра</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Дилер</div>
+      <div class="cards" id="dealerCards">
+        <div class="card">🂠</div>
+        <div class="card">🂠</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Игрок</div>
+      <div class="cards" id="playerCards">
+        <div class="card">A♠</div>
+        <div class="card">10♦</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="hitBtn">Hit</button>
+      <button id="standBtn">Stand</button>
+    </div>
+
+    <div class="status" id="status"></div>
+  </div>
 
   <script>
     const tg = window.Telegram.WebApp;
-
     tg.ready();
     tg.expand();
 
     const user = tg.initDataUnsafe?.user;
+    const userElement = document.getElementById("user");
 
     if (user) {
-      document.getElementById("user").innerText =
-        "Привет, " + (user.first_name || user.username || "Игрок");
+      userElement.innerText = "Привет, " + (user.first_name || user.username || "Игрок");
     } else {
-      document.getElementById("user").innerText =
-        "Открыто вне Telegram";
+      userElement.innerText = "Открыто вне Telegram";
     }
-  </script>
 
+    document.getElementById("newGameBtn").addEventListener("click", () => {
+      document.getElementById("status").innerText = "Новая игра скоро будет подключена";
+    });
+
+    document.getElementById("hitBtn").addEventListener("click", () => {
+      document.getElementById("status").innerText = "Кнопка Hit скоро заработает";
+    });
+
+    document.getElementById("standBtn").addEventListener("click", () => {
+      document.getElementById("status").innerText = "Кнопка Stand скоро заработает";
+    });
+  </script>
 </body>
- 
 </html>
