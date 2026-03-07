@@ -160,6 +160,7 @@
   tg.expand();
 
   const user = tg.initDataUnsafe?.user;
+  const userId = user?.id;
   const userElement = document.getElementById("user");
   const balanceElement = document.getElementById("balance");
   const dealerCardsElement = document.getElementById("dealerCards");
@@ -221,61 +222,83 @@
   }
 
   async function loadState() {
-    const res = await fetch("/api/game/state");
-    const data = await res.json();
-    updateUI(data);
+  if (!userId) {
+    statusElement.innerText = "Не удалось получить userId Telegram";
+    return;
   }
+
+  const res = await fetch(`/api/game/state?userId=${userId}`);
+  const data = await res.json();
+  updateUI(data);
+}
 
   async function startGame() {
-    const bet = Number(betInput.value);
-
-    const res = await fetch("/api/game/start", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bet })
-    });
-
-    const data = await res.json();
-
-    if (data.error) {
-      statusElement.innerText = data.error;
-      return;
-    }
-
-    updateUI(data);
+  if (!userId) {
+    statusElement.innerText = "Не удалось получить userId Telegram";
+    return;
   }
+
+  const bet = Number(betInput.value);
+
+  const res = await fetch("/api/game/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, bet })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    statusElement.innerText = data.error;
+    return;
+  }
+
+  updateUI(data);
+}
 
   async function hit() {
-    const res = await fetch("/api/game/hit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }
-    });
-
-    const data = await res.json();
-
-    if (data.error) {
-      statusElement.innerText = data.error;
-      return;
-    }
-
-    updateUI(data);
+  if (!userId) {
+    statusElement.innerText = "Не удалось получить userId Telegram";
+    return;
   }
+
+  const res = await fetch("/api/game/hit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    statusElement.innerText = data.error;
+    return;
+  }
+
+  updateUI(data);
+}
 
   async function stand() {
-    const res = await fetch("/api/game/stand", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }
-    });
-
-    const data = await res.json();
-
-    if (data.error) {
-      statusElement.innerText = data.error;
-      return;
-    }
-
-    updateUI(data);
+  if (!userId) {
+    statusElement.innerText = "Не удалось получить userId Telegram";
+    return;
   }
+
+  const res = await fetch("/api/game/stand", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    statusElement.innerText = data.error;
+    return;
+  }
+
+  updateUI(data);
+}
 
   document.getElementById("newGameBtn").addEventListener("click", startGame);
   document.getElementById("hitBtn").addEventListener("click", hit);
