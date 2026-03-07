@@ -10,24 +10,14 @@ const __dirname = path.dirname(__filename);
 
 app.use("/", express.static(path.join(__dirname, "..", "public")));
 
-// ------------------------
-// Временное хранилище игры
-// ------------------------
-let gameState = {
-  balance: 1000,
-  bet: 50,
-  deck: [],
-  player: [],
-  dealer: [],
-  gameOver: true,
-  status: "Нажми 'Новая игра'"
-};
+// ========================
+// Хранилище пользователей
+// ========================
+const users = {};
 
-let gameLogs = [];
-
-// ------------------------
+// ========================
 // Карты и логика
-// ------------------------
+// ========================
 const suits = ["♠", "♥", "♦", "♣"];
 const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 
@@ -77,188 +67,240 @@ function formatCard(card) {
   return `${card.rank}${card.suit}`;
 }
 
-function addLog(action, extra = {}) {
-  gameLogs.unshift({
+function getUserId(req) {
+  const userId = req.body.userId || req.query.userId;
+  return String(userId || "");
+}
+
+function getOrCreateUserState(userId) {
+  if (!userId) return null;
+
+  if (!users[userId]) {
+    users[userId] = {
+      balance: 1000,
+      bet: 50,
+      deck: [],
+      player: [],
+      dealer: [],
+      gameOver: true,
+      status: "Нажми 'Новая игра'",
+      logs: []
+    };
+  }
+
+  return users[userId];
+}
+
+function addLog(state, action, extra = {}) {
+  state.logs.unshift({
     time: new Date().toLocaleString("ru-RU"),
     action,
-    balance: gameState.balance,
-    bet: gameState.bet,
-    player: gameState.player.map(formatCard),
-    dealer: gameState.dealer.map(formatCard),
-    playerScore: calculateScore(gameState.player),
-    dealerScore: calculateScore(gameState.dealer),
-    gameOver: gameState.gameOver,
-    status: gameState.status,
+    balance: state.balance,
+    bet: state.bet,
+    player: state.player.map(formatCard),
+    dealer: state.dealer.map(formatCard),
+    playerScore: calculateScore(state.player),
+    dealerScore: calculateScore(state.dealer),
+    gameOver: state.gameOver,
+    status: state.status,
     ...extra
   });
 
-  if (gameLogs.length > 20) {
-    gameLogs = gameLogs.slice(0, 20);
+  if (state.logs.length > 20) {
+    state.logs = state.logs.slice(0, 20);
   }
 }
 
-function getPublicGameState(hideDealerSecondCard = true) {
-  const playerScore = calculateScore(gameState.player);
+function getPublicGameState(state, hideDealerSecondCard = true) {
+  const playerScore = calculateScore(state.player);
 
   let dealerCards = [];
   let dealerScore = 0;
 
-  if (hideDealerSecondCard && !gameState.gameOver) {
+  if (hideDealerSecondCard && !state.gameOver) {
     dealerCards = [
-      gameState.dealer[0] ? formatCard(gameState.dealer[0]) : "🂠",
+      state.dealer[0] ? formatCard(state.dealer[0]) : "🂠",
       "🂠"
     ];
-    dealerScore = gameState.dealer[0] ? getCardValue(gameState.dealer[0]) : 0;
+    dealerScore = state.dealer[0] ? getCardValue(state.dealer[0]) : 0;
   } else {
-    dealerCards = gameState.dealer.map(formatCard);
-    dealerScore = calculateScore(gameState.dealer);
+    dealerCards = state.dealer.map(formatCard);
+    dealerScore = calculateScore(state.dealer);
   }
 
   return {
-    balance: gameState.balance,
-    bet: gameState.bet,
-    player: gameState.player.map(formatCard),
+    balance: state.balance,
+    bet: state.bet,
+    player: state.player.map(formatCard),
     dealer: dealerCards,
     playerScore,
     dealerScore,
-    gameOver: gameState.gameOver,
-    status: gameState.status,
-    logs: gameLogs
+    gameOver: state.gameOver,
+    status: state.status,
+    logs: state.logs
   };
 }
 
-function dealerTurn() {
-  while (calculateScore(gameState.dealer) < 17) {
-    gameState.dealer.push(gameState.deck.pop());
+function dealerTurn(state) {
+  while (calculateScore(state.dealer) < 17) {
+    state.dealer.push(state.deck.pop());
   }
 }
 
-function finishGame() {
-  const playerScore = calculateScore(gameState.player);
-  const dealerScore = calculateScore(gameState.dealer);
+function finishGame(state) {
+  const playerScore = calculateScore(state.player);
+  const dealerScore = calculateScore(state.dealer);
 
-  gameState.gameOver = true;
+  state.gameOver = true;
 
   if (playerScore > 21) {
-    gameState.balance -= gameState.bet;
-    gameState.status = `Перебор! Ты проиграл -${gameState.bet}.`;
-    addLog("finish_bust");
+    state.balance -= state.bet;
+    state.status = `Перебор! Ты проиграл -${state.bet}.`;
+    addLog(state, "finish_bust");
     return;
   }
 
   if (dealerScore > 21) {
-    gameState.balance += gameState.bet;
-    gameState.status = `У дилера перебор! Ты выиграл +${gameState.bet}.`;
-    addLog("finish_dealer_bust");
+    state.balance += state.bet;
+    state.status = `У дилера перебор! Ты выиграл +${state.bet}.`;
+    addLog(state, "finish_dealer_bust");
     return;
   }
 
   if (playerScore > dealerScore) {
-    gameState.balance += gameState.bet;
-    gameState.status = `Ты выиграл +${gameState.bet}!`;
-    addLog("finish_win");
+    state.balance += state.bet;
+    state.status = `Ты выиграл +${state.bet}!`;
+    addLog(state, "finish_win");
     return;
   }
 
   if (playerScore < dealerScore) {
-    gameState.balance -= gameState.bet;
-    gameState.status = `Ты проиграл -${gameState.bet}.`;
-    addLog("finish_lose");
+    state.balance -= state.bet;
+    state.status = `Ты проиграл -${state.bet}.`;
+    addLog(state, "finish_lose");
     return;
   }
 
-  gameState.status = "Ничья.";
-  addLog("finish_push");
+  state.status = "Ничья.";
+  addLog(state, "finish_push");
 }
 
-// ------------------------
+// ========================
 // API
-// ------------------------
+// ========================
 app.post("/api/game/start", (req, res) => {
+  const userId = getUserId(req);
+  const state = getOrCreateUserState(userId);
+
+  if (!state) {
+    return res.status(400).json({ error: "Нет userId" });
+  }
+
   const bet = Number(req.body.bet);
 
   if (!Number.isFinite(bet) || bet <= 0) {
     return res.status(400).json({ error: "Некорректная ставка" });
   }
 
-  if (bet > gameState.balance) {
+  if (bet > state.balance) {
     return res.status(400).json({ error: "Недостаточно баланса" });
   }
 
-  gameState.bet = Math.floor(bet);
-  gameState.deck = createDeck();
-  gameState.player = [gameState.deck.pop(), gameState.deck.pop()];
-  gameState.dealer = [gameState.deck.pop(), gameState.deck.pop()];
-  gameState.gameOver = false;
-  gameState.status = "Игра началась. Твой ход.";
+  state.bet = Math.floor(bet);
+  state.deck = createDeck();
+  state.player = [state.deck.pop(), state.deck.pop()];
+  state.dealer = [state.deck.pop(), state.deck.pop()];
+  state.gameOver = false;
+  state.status = "Игра началась. Твой ход.";
 
-  const playerScore = calculateScore(gameState.player);
-  const dealerScore = calculateScore(gameState.dealer);
+  const playerScore = calculateScore(state.player);
+  const dealerScore = calculateScore(state.dealer);
 
   if (playerScore === 21 && dealerScore === 21) {
-    gameState.gameOver = true;
-    gameState.status = "У обоих Blackjack. Ничья.";
-    addLog("start_double_blackjack");
-    return res.json(getPublicGameState(false));
+    state.gameOver = true;
+    state.status = "У обоих Blackjack. Ничья.";
+    addLog(state, "start_double_blackjack");
+    return res.json(getPublicGameState(state, false));
   }
 
   if (playerScore === 21) {
-    gameState.gameOver = true;
-    const blackjackWin = Math.floor(gameState.bet * 1.5);
-    gameState.balance += blackjackWin;
-    gameState.status = `Blackjack! Ты выиграл +${blackjackWin}!`;
-    addLog("start_player_blackjack", { blackjackWin });
-    return res.json(getPublicGameState(false));
+    state.gameOver = true;
+    const blackjackWin = Math.floor(state.bet * 1.5);
+    state.balance += blackjackWin;
+    state.status = `Blackjack! Ты выиграл +${blackjackWin}!`;
+    addLog(state, "start_player_blackjack", { blackjackWin });
+    return res.json(getPublicGameState(state, false));
   }
 
   if (dealerScore === 21) {
-    gameState.gameOver = true;
-    gameState.balance -= gameState.bet;
-    gameState.status = `У дилера Blackjack. Ты проиграл -${gameState.bet}.`;
-    addLog("start_dealer_blackjack");
-    return res.json(getPublicGameState(false));
+    state.gameOver = true;
+    state.balance -= state.bet;
+    state.status = `У дилера Blackjack. Ты проиграл -${state.bet}.`;
+    addLog(state, "start_dealer_blackjack");
+    return res.json(getPublicGameState(state, false));
   }
 
-  addLog("start_game");
-  res.json(getPublicGameState(true));
+  addLog(state, "start_game");
+  res.json(getPublicGameState(state, true));
 });
 
 app.post("/api/game/hit", (req, res) => {
-  if (gameState.gameOver) {
+  const userId = getUserId(req);
+  const state = getOrCreateUserState(userId);
+
+  if (!state) {
+    return res.status(400).json({ error: "Нет userId" });
+  }
+
+  if (state.gameOver) {
     return res.status(400).json({ error: "Игра уже завершена" });
   }
 
-  gameState.player.push(gameState.deck.pop());
+  state.player.push(state.deck.pop());
 
-  const playerScore = calculateScore(gameState.player);
+  const playerScore = calculateScore(state.player);
 
   if (playerScore > 21) {
-    gameState.gameOver = true;
-    gameState.balance -= gameState.bet;
-    gameState.status = `Перебор! Ты проиграл -${gameState.bet}.`;
-    addLog("hit_bust");
-    return res.json(getPublicGameState(false));
+    state.gameOver = true;
+    state.balance -= state.bet;
+    state.status = `Перебор! Ты проиграл -${state.bet}.`;
+    addLog(state, "hit_bust");
+    return res.json(getPublicGameState(state, false));
   }
 
-  gameState.status = "Ты взял карту.";
-  addLog("hit");
-  res.json(getPublicGameState(true));
+  state.status = "Ты взял карту.";
+  addLog(state, "hit");
+  res.json(getPublicGameState(state, true));
 });
 
 app.post("/api/game/stand", (req, res) => {
-  if (gameState.gameOver) {
+  const userId = getUserId(req);
+  const state = getOrCreateUserState(userId);
+
+  if (!state) {
+    return res.status(400).json({ error: "Нет userId" });
+  }
+
+  if (state.gameOver) {
     return res.status(400).json({ error: "Игра уже завершена" });
   }
 
-  dealerTurn();
-  addLog("dealer_turn");
-  finishGame();
+  dealerTurn(state);
+  addLog(state, "dealer_turn");
+  finishGame(state);
 
-  res.json(getPublicGameState(false));
+  res.json(getPublicGameState(state, false));
 });
 
 app.get("/api/game/state", (req, res) => {
-  res.json(getPublicGameState(true));
+  const userId = getUserId(req);
+  const state = getOrCreateUserState(userId);
+
+  if (!state) {
+    return res.status(400).json({ error: "Нет userId" });
+  }
+
+  res.json(getPublicGameState(state, true));
 });
 
 const PORT = process.env.PORT || 3000;
