@@ -150,30 +150,80 @@
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();
 
-    const user = tg.initDataUnsafe?.user;
-    const userElement = document.getElementById("user");
+  const user = tg.initDataUnsafe?.user;
+  const userElement = document.getElementById("user");
+  const balanceElement = document.getElementById("balance");
+  const dealerCardsElement = document.getElementById("dealerCards");
+  const playerCardsElement = document.getElementById("playerCards");
+  const statusElement = document.getElementById("status");
 
-    if (user) {
-      userElement.innerText = "Привет, " + (user.first_name || user.username || "Игрок");
-    } else {
-      userElement.innerText = "Открыто вне Telegram";
-    }
+  if (user) {
+    userElement.innerText = "Привет, " + (user.first_name || user.username || "Игрок");
+  } else {
+    userElement.innerText = "Открыто вне Telegram";
+  }
 
-    document.getElementById("newGameBtn").addEventListener("click", () => {
-      document.getElementById("status").innerText = "Новая игра скоро будет подключена";
+  function renderCards(container, cards) {
+    container.innerHTML = "";
+    cards.forEach(card => {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerText = card;
+      container.appendChild(div);
+    });
+  }
+
+  function updateUI(data) {
+    balanceElement.innerText = data.balance;
+    renderCards(playerCardsElement, data.player);
+    renderCards(dealerCardsElement, data.dealer);
+    statusElement.innerText = data.status;
+  }
+
+  async function loadState() {
+    const res = await fetch("/api/game/state");
+    const data = await res.json();
+    updateUI(data);
+  }
+
+  async function startGame() {
+    const res = await fetch("/api/game/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    const data = await res.json();
+    updateUI(data);
+  }
+
+  async function hit() {
+    const res = await fetch("/api/game/hit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
     });
 
-    document.getElementById("hitBtn").addEventListener("click", () => {
-      document.getElementById("status").innerText = "Кнопка Hit скоро заработает";
+    const data = await res.json();
+    if (!data.error) updateUI(data);
+  }
+
+  async function stand() {
+    const res = await fetch("/api/game/stand", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
     });
 
-    document.getElementById("standBtn").addEventListener("click", () => {
-      document.getElementById("status").innerText = "Кнопка Stand скоро заработает";
-    });
-  </script>
+    const data = await res.json();
+    if (!data.error) updateUI(data);
+  }
+
+  document.getElementById("newGameBtn").addEventListener("click", startGame);
+  document.getElementById("hitBtn").addEventListener("click", hit);
+  document.getElementById("standBtn").addEventListener("click", stand);
+
+  loadState();
+</script>
 </body>
 </html>
