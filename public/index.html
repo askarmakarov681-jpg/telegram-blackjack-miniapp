@@ -126,15 +126,15 @@
     </div>
 
     <div class="panel">
-      <div class="section-title">Дилер</div>
-      <div class="cards" id="dealerCards">
-        <div class="card">🂠</div>
-        <div class="card">🂠</div>
-      </div>
+        <div class="section-title">Дилер (<span id="dealerScore">0</span>)</div>
+        <div class="cards" id="dealerCards">
+          <div class="card">🂠</div>
+          <div class="card">🂠</div>
+        </div>
     </div>
 
     <div class="panel">
-      <div class="section-title">Игрок</div>
+      <div class="section-title">Игрок (<span id="playerScore">0</span>)</div>
       <div class="cards" id="playerCards">
         <div class="card">A♠</div>
         <div class="card">10♦</div>
@@ -147,6 +147,11 @@
     </div>
 
     <div class="status" id="status"></div>
+
+    <div class="panel">
+      <div class="section-title">Логи игры</div>
+      <div id="logs" style="text-align:left; font-size:14px; max-height:220px; overflow-y:auto;"></div>
+    </div>
   </div>
 
   <script>
@@ -159,7 +164,11 @@
   const balanceElement = document.getElementById("balance");
   const dealerCardsElement = document.getElementById("dealerCards");
   const playerCardsElement = document.getElementById("playerCards");
+  const dealerScoreElement = document.getElementById("dealerScore");
+  const playerScoreElement = document.getElementById("playerScore");
   const statusElement = document.getElementById("status");
+  const betInput = document.getElementById("bet");
+  const logsElement = document.getElementById("logs");
 
   if (user) {
     userElement.innerText = "Привет, " + (user.first_name || user.username || "Игрок");
@@ -177,11 +186,38 @@
     });
   }
 
+  function renderLogs(logs) {
+    logsElement.innerHTML = "";
+
+    if (!logs || logs.length === 0) {
+      logsElement.innerHTML = "<div>Логов пока нет</div>";
+      return;
+    }
+
+    logs.forEach(log => {
+      const div = document.createElement("div");
+      div.style.padding = "8px 0";
+      div.style.borderBottom = "1px solid rgba(255,255,255,0.08)";
+      div.innerHTML = `
+        <div><b>${log.time}</b> — ${log.action}</div>
+        <div>Статус: ${log.status}</div>
+        <div>Ставка: ${log.bet} | Баланс: ${log.balance}</div>
+        <div>Игрок: ${log.player.join(", ")} (${log.playerScore})</div>
+        <div>Дилер: ${log.dealer.join(", ")} (${log.dealerScore})</div>
+      `;
+      logsElement.appendChild(div);
+    });
+  }
+
   function updateUI(data) {
     balanceElement.innerText = data.balance;
+    dealerScoreElement.innerText = data.dealerScore;
+    playerScoreElement.innerText = data.playerScore;
+    betInput.value = data.bet ?? betInput.value;
     renderCards(playerCardsElement, data.player);
     renderCards(dealerCardsElement, data.dealer);
     statusElement.innerText = data.status;
+    renderLogs(data.logs);
   }
 
   async function loadState() {
@@ -191,11 +227,21 @@
   }
 
   async function startGame() {
+    const bet = Number(betInput.value);
+
     const res = await fetch("/api/game/start", {
       method: "POST",
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bet })
     });
+
     const data = await res.json();
+
+    if (data.error) {
+      statusElement.innerText = data.error;
+      return;
+    }
+
     updateUI(data);
   }
 
@@ -206,7 +252,13 @@
     });
 
     const data = await res.json();
-    if (!data.error) updateUI(data);
+
+    if (data.error) {
+      statusElement.innerText = data.error;
+      return;
+    }
+
+    updateUI(data);
   }
 
   async function stand() {
@@ -216,7 +268,13 @@
     });
 
     const data = await res.json();
-    if (!data.error) updateUI(data);
+
+    if (data.error) {
+      statusElement.innerText = data.error;
+      return;
+    }
+
+    updateUI(data);
   }
 
   document.getElementById("newGameBtn").addEventListener("click", startGame);
