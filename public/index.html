@@ -2,18 +2,35 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Blackjack Mini App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0b0b0b;
+      --panel: #171717;
+      --panel-2: #202020;
+      --panel-3: #111111;
+      --text: #ffffff;
+      --muted: #bdbdbd;
+      --line: rgba(255,255,255,0.06);
+      --accent: #2ecc71;
+      --accent-2: #3498db;
+      --danger: #e74c3c;
+      --gold: #f1c40f;
+    }
 
     body {
       margin: 0;
-      background: #0b0b0b;
-      color: #fff;
+      background: var(--bg);
+      color: var(--text);
       font-family: Arial, sans-serif;
-      padding: 16px;
+      min-height: 100vh;
+      padding: 14px 14px 90px;
     }
 
     .app {
@@ -21,112 +38,283 @@
       margin: 0 auto;
     }
 
-    .card {
-      background: #171717;
-      border-radius: 16px;
+    .header {
+      background: linear-gradient(180deg, #1a1a1a 0%, #121212 100%);
+      border-radius: 18px;
       padding: 16px;
       margin-bottom: 14px;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.05);
+      box-shadow: 0 0 0 1px var(--line);
     }
 
-    h1, h2, h3, p {
-      margin-top: 0;
-    }
-
-    .topbar {
+    .header-top {
       display: flex;
       justify-content: space-between;
+      align-items: flex-start;
       gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
     }
 
-    .balance {
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .balance-box {
+      text-align: right;
+      background: rgba(255,255,255,0.04);
+      border-radius: 14px;
+      padding: 10px 12px;
+      min-width: 120px;
+    }
+
+    .balance-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .balance-value {
       font-size: 22px;
-      font-weight: bold;
+      font-weight: 700;
     }
 
-    .status {
+    .status-bar {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+      color: #e2e2e2;
       font-size: 14px;
-      color: #d7d7d7;
-      margin-top: 8px;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--panel);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 0 0 1px var(--line);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 12px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .table-zone {
+      background:
+        radial-gradient(circle at center, rgba(46, 204, 113, 0.18), transparent 60%),
+        linear-gradient(180deg, #133321 0%, #0f2518 100%);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.05),
+        inset 0 20px 40px rgba(0,0,0,0.18);
+    }
+
+    .hand-block + .hand-block {
+      margin-top: 18px;
+    }
+
+    .hand-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .hand-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .score-badge {
+      background: rgba(0,0,0,0.28);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
     }
 
     .cards {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      margin-top: 10px;
+      min-height: 86px;
     }
 
     .playing-card {
-      min-width: 56px;
-      height: 78px;
+      width: 58px;
+      height: 80px;
       border-radius: 12px;
       background: #fff;
       color: #111;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: bold;
       font-size: 22px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      font-weight: 700;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     }
 
-    .controls {
+    .empty-cards {
+      color: rgba(255,255,255,0.7);
+      font-size: 13px;
+      padding-top: 24px;
+    }
+
+    .bet-grid,
+    .action-grid,
+    .two-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
     }
 
-    .controls-3 {
-      display: grid;
+    .bet-grid {
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
     }
 
-    button, input {
+    .action-grid,
+    .two-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    input,
+    button {
       width: 100%;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 14px;
-      font-size: 16px;
+      font-size: 15px;
     }
 
     input {
-      background: #222;
+      background: #242424;
       color: #fff;
       outline: none;
     }
 
     button {
       cursor: pointer;
-      font-weight: bold;
+      font-weight: 700;
     }
 
-    .btn-primary { background: #2ecc71; color: #111; }
-    .btn-secondary { background: #3498db; color: #fff; }
-    .btn-danger { background: #e74c3c; color: #fff; }
-    .btn-dark { background: #2a2a2a; color: #fff; }
-
-    .muted {
-      color: #bdbdbd;
-      font-size: 13px;
+    .btn-dark {
+      background: #2a2a2a;
+      color: #fff;
     }
 
-    .log-list {
+    .btn-green {
+      background: var(--accent);
+      color: #111;
+    }
+
+    .btn-blue {
+      background: var(--accent-2);
+      color: #fff;
+    }
+
+    .btn-red {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #111;
+    }
+
+    .list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      max-height: 280px;
-      overflow-y: auto;
+      gap: 10px;
     }
 
-    .log-item {
-      background: #202020;
-      border-radius: 12px;
-      padding: 10px;
-      font-size: 13px;
+    .list-item {
+      background: var(--panel-2);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .row-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .stat-box {
+      background: var(--panel-2);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .tabbar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(10,10,10,0.94);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .tabbar-inner {
+      max-width: 560px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .tab-btn {
+      background: #1e1e1e;
+      color: #d7d7d7;
+      border-radius: 14px;
+      padding: 12px 8px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .tab-btn.active {
+      background: #2a2a2a;
+      color: #fff;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
     }
 
     .admin-box {
@@ -137,84 +325,165 @@
       display: block;
     }
 
-    .small {
-      font-size: 12px;
-      color: #bfbfbf;
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <div class="card">
-      <div class="topbar">
+    <div class="header">
+      <div class="header-top">
         <div>
-          <h1>🃏 Blackjack</h1>
-          <div id="playerName" class="muted">Игрок</div>
+          <h1 class="title">🃏 Blackjack</h1>
+          <div id="playerName" class="subtitle">Игрок</div>
         </div>
-        <div class="balance">💰 <span id="balance">0</span></div>
+        <div class="balance-box">
+          <div class="balance-label">Баланс</div>
+          <div class="balance-value">💰 <span id="balance">0</span></div>
+        </div>
       </div>
-      <div id="status" class="status">Загрузка...</div>
+      <div id="status" class="status-bar">Загрузка...</div>
     </div>
 
-    <div class="card">
-      <h3>Ставка</h3>
-      <div class="controls-3">
-        <input id="betInput" type="number" min="1" step="1" value="50" />
-        <button class="btn-dark" onclick="setBet(50)">50</button>
-        <button class="btn-dark" onclick="setBet(100)">100</button>
+    <!-- ЭКРАН ИГРЫ -->
+    <section id="screen-game" class="screen active">
+      <div class="card">
+        <div class="section-title">Игровой стол</div>
+        <div class="table-zone">
+          <div class="hand-block">
+            <div class="hand-head">
+              <div class="hand-title">Дилер</div>
+              <div class="score-badge">Очки: <span id="dealerScore">0</span></div>
+            </div>
+            <div id="dealerCards" class="cards"></div>
+          </div>
+
+          <div class="hand-block">
+            <div class="hand-head">
+              <div class="hand-title">Игрок</div>
+              <div class="score-badge">Очки: <span id="playerScore">0</span></div>
+            </div>
+            <div id="playerCards" class="cards"></div>
+          </div>
+        </div>
       </div>
-      <div style="height:10px"></div>
-      <div class="controls-3">
-        <button class="btn-dark" onclick="setBet(250)">250</button>
-        <button class="btn-dark" onclick="setBet(500)">500</button>
-        <button class="btn-primary" onclick="startGame()">Новая игра</button>
+
+      <div class="card">
+        <div class="section-title">Ставка</div>
+        <div class="bet-grid">
+          <input id="betInput" type="number" min="1" step="1" value="50" />
+          <button class="btn-dark" onclick="setBet(50)">50</button>
+          <button class="btn-dark" onclick="setBet(100)">100</button>
+        </div>
+        <div style="height:10px"></div>
+        <div class="bet-grid">
+          <button class="btn-dark" onclick="setBet(250)">250</button>
+          <button class="btn-dark" onclick="setBet(500)">500</button>
+          <button class="btn-green" onclick="startGame()">Новая игра</button>
+        </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h3>Дилер: <span id="dealerScore">0</span></h3>
-      <div id="dealerCards" class="cards"></div>
-    </div>
-
-    <div class="card">
-      <h3>Ты: <span id="playerScore">0</span></h3>
-      <div id="playerCards" class="cards"></div>
-    </div>
-
-    <div class="card">
-      <div class="controls">
-        <button id="hitBtn" class="btn-secondary" onclick="hit()">Взять</button>
-        <button id="standBtn" class="btn-danger" onclick="stand()">Стоп</button>
+      <div class="card">
+        <div class="section-title">Действия</div>
+        <div class="action-grid">
+          <button id="hitBtn" class="btn-blue" onclick="hit()">Взять</button>
+          <button id="standBtn" class="btn-red" onclick="stand()">Стоп</button>
+        </div>
       </div>
-      <div style="height:10px"></div>
-      <button id="rescueBtn" class="btn-primary" style="display:none;" onclick="rescueBonus()">
-        НА НИЩЕТА ЕБАНАЯ +1000
-      </button>
-    </div>
+    </section>
 
-    <div class="card">
-      <h3>История</h3>
-      <div id="logs" class="log-list"></div>
-    </div>
-
-    <div class="card">
-      <h3>🏆 Топ игроков</h3>
-      <div id="leaderboard"></div>
-    </div>
-
-    <div id="adminBox" class="card admin-box">
-      <h3>Админка</h3>
-      <div class="controls">
-        <input id="adminTargetId" type="text" placeholder="Telegram ID пользователя" />
-        <button class="btn-dark" onclick="adminLoadUser()">Найти</button>
+    <!-- ЭКРАН ЛИДЕРОВ -->
+    <section id="screen-leaders" class="screen">
+      <div class="card">
+        <div class="row-between">
+          <div class="section-title" style="margin-bottom:0;">🏆 Лидеры</div>
+          <button class="btn-dark" style="width:auto;padding:10px 14px;" onclick="loadLeaderboard()">Обновить</button>
+        </div>
+        <div id="leaderboard" class="list"></div>
       </div>
-      <div style="height:10px"></div>
-      <div class="controls">
-        <input id="adminAmount" type="number" placeholder="Сумма +/-" />
-        <button class="btn-primary" onclick="adminChangeBalance()">Изменить баланс</button>
+    </section>
+
+    <!-- ЭКРАН БОНУСОВ -->
+    <section id="screen-bonuses" class="screen">
+      <div class="card">
+        <div class="section-title">🎁 Бонусы</div>
+        <div class="muted" style="margin-bottom:14px;">
+          Здесь будут все награды, бонусы и специальные возможности игрока.
+        </div>
+
+        <div class="list-item">
+          <div class="row-between">
+            <div>
+              <div style="font-weight:700; margin-bottom:4px;">Rescue Bonus</div>
+              <div class="muted">Доступен только когда баланс равен 0 и игра завершена.</div>
+            </div>
+          </div>
+          <div style="height:12px"></div>
+          <button id="rescueBtn" class="btn-gold" style="display:none;" onclick="rescueBonus()">
+            Получить +1000
+          </button>
+          <div id="rescueHint" class="muted">Пока недоступно</div>
+        </div>
       </div>
-      <div style="height:10px"></div>
-      <pre id="adminResult" class="small" style="white-space:pre-wrap;"></pre>
+    </section>
+
+    <!-- ЭКРАН ПРОФИЛЯ -->
+    <section id="screen-profile" class="screen">
+      <div class="card">
+        <div class="section-title">👤 Профиль игрока</div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-label">Имя</div>
+            <div id="profileName" class="stat-value" style="font-size:16px;">Игрок</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Telegram ID</div>
+            <div id="profileId" class="stat-value" style="font-size:16px;">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Баланс</div>
+            <div id="profileBalance" class="stat-value">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Последних логов</div>
+            <div id="profileLogsCount" class="stat-value">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">История игрока</div>
+        <div id="logs" class="list"></div>
+      </div>
+
+      <div id="adminBox" class="card admin-box">
+        <div class="section-title">🛠 Админ-панель</div>
+        <div class="two-grid">
+          <input id="adminTargetId" type="text" placeholder="Telegram ID пользователя" />
+          <button class="btn-dark" onclick="adminLoadUser()">Найти</button>
+        </div>
+        <div style="height:10px"></div>
+        <div class="two-grid">
+          <input id="adminAmount" type="number" placeholder="Сумма +/-" />
+          <button class="btn-green" onclick="adminChangeBalance()">Изменить баланс</button>
+        </div>
+        <div style="height:12px"></div>
+        <div class="list-item">
+          <pre id="adminResult" class="muted"></pre>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="tabbar">
+    <div class="tabbar-inner">
+      <button class="tab-btn active" data-screen="game" onclick="switchScreen('game', this)">🎮<br>Игра</button>
+      <button class="tab-btn" data-screen="leaders" onclick="switchScreen('leaders', this)">🏆<br>Лидеры</button>
+      <button class="tab-btn" data-screen="bonuses" onclick="switchScreen('bonuses', this)">🎁<br>Бонусы</button>
+      <button class="tab-btn" data-screen="profile" onclick="switchScreen('profile', this)">👤<br>Профиль</button>
     </div>
   </div>
 
@@ -238,32 +507,32 @@
     const username = tgUser?.username || null;
     const firstName = tgUser?.first_name || "Игрок";
 
-    document.getElementById("playerName").textContent =
-      tgUser ? `${firstName}${username ? " (@" + username + ")" : ""}` : `Тестовый режим: ${userId}`;
+    const displayName = tgUser
+      ? `${firstName}${username ? " (@" + username + ")" : ""}`
+      : `Тестовый режим: ${userId}`;
+
+    document.getElementById("playerName").textContent = displayName;
+    document.getElementById("profileName").textContent = firstName || "Игрок";
+    document.getElementById("profileId").textContent = userId || "—";
 
     let currentState = null;
 
-    async function loadLeaderboard() {
+    function switchScreen(screenName, btnEl) {
+      document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
 
-      const res = await fetch("/api/leaderboard");
+      document.getElementById(`screen-${screenName}`).classList.add("active");
+      if (btnEl) btnEl.classList.add("active");
 
-      const data = await res.json();
-
-      const box = document.getElementById("leaderboard");
-
-      box.innerHTML = data.map((u,i)=>
-        `<div>${i+1}. ${u.telegram_id} — ${u.balance}</div>`
-      ).join("");
-
+      if (screenName === "leaders") {
+        loadLeaderboard();
+      }
     }
 
     async function api(url, method = "GET", body = null) {
       const options = {
         method,
-        headers: {
-          "Content-Type": "application/json",
-          "x-telegram-init-data": tg.initData || ""
-        }
+        headers: { "Content-Type": "application/json" }
       };
 
       if (body) {
@@ -289,7 +558,7 @@
       el.innerHTML = "";
 
       if (!cards || !cards.length) {
-        el.innerHTML = `<div class="muted">Нет карт</div>`;
+        el.innerHTML = `<div class="empty-cards">Нет карт</div>`;
         return;
       }
 
@@ -306,19 +575,44 @@
       box.innerHTML = "";
 
       if (!logs || !logs.length) {
-        box.innerHTML = `<div class="muted">История пока пустая</div>`;
+        box.innerHTML = `<div class="list-item muted">История пока пустая</div>`;
         return;
       }
 
       logs.forEach(log => {
         const div = document.createElement("div");
-        div.className = "log-item";
+        div.className = "list-item";
         div.innerHTML = `
-          <div><b>${escapeHtml(log.action)}</b> — ${escapeHtml(log.status || "")}</div>
-          <div class="small">Ставка: ${log.bet} | Баланс: ${log.balance}</div>
-          <div class="small">Ты: ${(log.player_cards || []).join(" ")} (${log.player_score})</div>
-          <div class="small">Дилер: ${(log.dealer_cards || []).join(" ")} (${log.dealer_score})</div>
-          <div class="small">${escapeHtml(log.created_at || "")}</div>
+          <div style="font-weight:700; margin-bottom:6px;">${escapeHtml(log.action)}</div>
+          <div class="muted" style="margin-bottom:6px;">${escapeHtml(log.status || "")}</div>
+          <div class="muted">Ставка: ${log.bet} | Баланс: ${log.balance}</div>
+          <div class="muted">Ты: ${(log.player_cards || []).join(" ")} (${log.player_score})</div>
+          <div class="muted">Дилер: ${(log.dealer_cards || []).join(" ")} (${log.dealer_score})</div>
+        `;
+        box.appendChild(div);
+      });
+    }
+
+    function renderLeaderboard(users) {
+      const box = document.getElementById("leaderboard");
+      box.innerHTML = "";
+
+      if (!users || !users.length) {
+        box.innerHTML = `<div class="list-item muted">Список лидеров пуст</div>`;
+        return;
+      }
+
+      users.forEach((user, index) => {
+        const div = document.createElement("div");
+        div.className = "list-item";
+        div.innerHTML = `
+          <div class="row-between">
+            <div>
+              <div style="font-weight:700;">#${index + 1}</div>
+              <div class="muted">${escapeHtml(user.telegram_id)}</div>
+            </div>
+            <div style="font-weight:700;">💰 ${user.balance}</div>
+          </div>
         `;
         box.appendChild(div);
       });
@@ -328,7 +622,10 @@
       currentState = state;
 
       document.getElementById("balance").textContent = state.balance;
+      document.getElementById("profileBalance").textContent = state.balance;
+      document.getElementById("profileLogsCount").textContent = (state.logs || []).length;
       document.getElementById("status").textContent = state.status;
+
       document.getElementById("playerScore").textContent = state.playerScore;
       document.getElementById("dealerScore").textContent = state.dealerScore;
       document.getElementById("betInput").value = state.bet;
@@ -339,11 +636,23 @@
 
       document.getElementById("hitBtn").disabled = state.gameOver;
       document.getElementById("standBtn").disabled = state.gameOver;
-      document.getElementById("rescueBtn").style.display = state.canRescueBonus ? "block" : "none";
+
+      const rescueBtn = document.getElementById("rescueBtn");
+      const rescueHint = document.getElementById("rescueHint");
+
+      if (state.canRescueBonus) {
+        rescueBtn.style.display = "block";
+        rescueHint.style.display = "none";
+      } else {
+        rescueBtn.style.display = "none";
+        rescueHint.style.display = "block";
+      }
 
       const adminIds = [1011931325];
       if (adminIds.includes(Number(userId))) {
         document.getElementById("adminBox").classList.add("show");
+      } else {
+        document.getElementById("adminBox").classList.remove("show");
       }
     }
 
@@ -433,6 +742,17 @@
       }
     }
 
+    async function loadLeaderboard() {
+      try {
+        const res = await fetch("/api/leaderboard");
+        const data = await res.json();
+        renderLeaderboard(data);
+      } catch (e) {
+        document.getElementById("leaderboard").innerHTML =
+          `<div class="list-item muted">Не удалось загрузить лидеров</div>`;
+      }
+    }
+
     function escapeHtml(str) {
       return String(str)
         .replaceAll("&", "&amp;")
@@ -441,8 +761,7 @@
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
     }
-    
-    loadLeaderboard();
+
     loadState();
   </script>
 </body>
