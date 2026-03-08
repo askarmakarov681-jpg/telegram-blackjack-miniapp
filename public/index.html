@@ -18,17 +18,13 @@
       --panel-2: rgba(28, 35, 46, 0.96);
       --panel-3: rgba(16, 21, 28, 0.96);
       --line: rgba(255,255,255,0.06);
-      --line-2: rgba(255,255,255,0.09);
       --text: #ffffff;
       --muted: #9eabb8;
       --green: #2ecc71;
-      --green-2: #1f9d57;
       --blue: #3b82f6;
       --red: #ef4444;
       --gold: #f5c451;
       --shadow: 0 10px 30px rgba(0,0,0,0.28);
-      --radius: 18px;
-      --radius-sm: 14px;
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
@@ -48,6 +44,14 @@
     .app {
       max-width: 560px;
       margin: 0 auto;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
     }
 
     .topbar {
@@ -90,7 +94,6 @@
     .brand-title {
       font-size: 18px;
       font-weight: 800;
-      letter-spacing: 0.2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -141,12 +144,12 @@
     .status-bar {
       margin-bottom: 12px;
       background:
-      linear-gradient(180deg, rgba(25,33,44,0.96) 0%, rgba(15,20,28,0.98) 100%);
-        border: 1px solid rgba(245,196,81,0.16);
-        border-radius: 16px;
-        padding: 12px 14px;
-        color: #eef5ff;
-        font-size: 13px;
+        linear-gradient(180deg, rgba(25,33,44,0.96) 0%, rgba(15,20,28,0.98) 100%);
+      border: 1px solid rgba(245,196,81,0.16);
+      border-radius: 16px;
+      padding: 12px 14px;
+      color: #eef5ff;
+      font-size: 13px;
       box-shadow:
         0 8px 24px rgba(0,0,0,0.24),
         inset 0 1px 0 rgba(255,255,255,0.03);
@@ -162,12 +165,16 @@
       background: linear-gradient(180deg, #ffd774 0%, #f0b940 100%);
     }
 
-    .screen {
-      display: none;
+    .status-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .screen.active {
-      display: block;
+    .status-inline::before {
+      content: "●";
+      color: #ffd774;
+      font-size: 10px;
     }
 
     .card {
@@ -186,44 +193,21 @@
       font-size: 15px;
       font-weight: 800;
       margin: 0 0 12px;
-      letter-spacing: 0.3px;
       color: #f3f6fa;
+    }
+
+    .glow-label {
+      color: #ffd774;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
     }
 
     .muted {
       color: var(--muted);
       font-size: 13px;
-    }
-
-    .bet-row {
-      display: grid;
-      grid-template-columns: 1fr 146px;
-      gap: 10px;
-      align-items: end;
-    }
-
-    .bet-input-wrap {
-      position: relative;
-    }
-
-    .bet-input-label {
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .bet-input {
-      width: 100%;
-      border: 1px solid rgba(255,255,255,0.06);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%);
-      color: #fff;
-      border-radius: 14px;
-      padding: 15px 16px;
-      font-size: 17px;
-      font-weight: 800;
-      outline: none;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
 
     .bet-card {
@@ -254,6 +238,32 @@
       font-size: 11px;
       font-weight: 700;
       white-space: nowrap;
+    }
+
+    .bet-input-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .bet-row {
+      display: grid;
+      grid-template-columns: 1fr 146px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .bet-input {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.06);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%);
+      color: #fff;
+      border-radius: 14px;
+      padding: 15px 16px;
+      font-size: 17px;
+      font-weight: 800;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
 
     .btn {
@@ -328,20 +338,6 @@
       border: 1px solid rgba(255,255,255,0.05);
       border-radius: 999px;
       pointer-events: none;
-    }
-
-    .deck-chip {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.18) 100%);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 999px;
-      padding: 7px 11px;
-      font-size: 11px;
-      color: #edf7ef;
-      letter-spacing: 0.3px;
     }
 
     .hand-block + .hand-block {
@@ -420,6 +416,12 @@
       padding-top: 22px;
     }
 
+    .game-accent-line {
+      height: 1px;
+      margin: 14px 0 10px;
+      background: linear-gradient(90deg, transparent 0%, rgba(245,196,81,0.28) 50%, transparent 100%);
+    }
+
     .action-row {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -477,6 +479,23 @@
       line-height: 1.2;
     }
 
+    .admin-box {
+      display: none;
+    }
+
+    .admin-box.show {
+      display: block;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      color: #cfd8e2;
+    }
+
     .tabbar {
       position: fixed;
       left: 0;
@@ -516,67 +535,7 @@
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
     }
 
-    .admin-box {
-      display: none;
-    }
-
-    .admin-box.show {
-      display: block;
-    }
-
-    .game-accent-line {
-  height: 1px;
-  margin: 14px 0 10px;
-  background: linear-gradient(90deg, transparent 0%, rgba(245,196,81,0.28) 50%, transparent 100%);
-}
-
-    .status-inline {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .status-inline::before {
-      content: "●";
-      color: #ffd774;
-      font-size: 10px;
-    }
-
-    .glow-label {
-    color: #ffd774;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
     @media (max-width: 430px) {
-      .playing-card {
-       width: 56px;
-       height: 78px;
-       font-size: 20px;
-      }
-
-    .bet-row {
-      grid-template-columns: 1fr 128px;
-    }
-  }
-
-    pre {
-      margin: 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: Consolas, monospace;
-      font-size: 12px;
-      color: #cfd8e2;
-    }
-
-    @media (max-width: 430px) {
-      .topbar {
-        padding: 10px 12px;
-      }
-
       .brand-title {
         font-size: 16px;
       }
@@ -586,12 +545,12 @@
       }
 
       .bet-row {
-        grid-template-columns: 1fr 122px;
+        grid-template-columns: 1fr 128px;
       }
 
       .playing-card {
-        width: 54px;
-        height: 76px;
+        width: 56px;
+        height: 78px;
         font-size: 20px;
       }
     }
@@ -599,128 +558,97 @@
 </head>
 <body>
   <div class="app">
-    <div class="topbar">
-      <div class="topbar-left">
-        <div class="brand-row">
-          <div class="brand-badge">🃏</div>
-          <div class="brand-title">Blackjack</div>
-        </div>
-        <div id="playerName" class="player-line">Игрок</div>
-      </div>
-
-      <div class="balance-pill">
-        <div class="balance-icon">💰</div>
-        <div class="balance-meta">
-          <div class="balance-label">Баланс</div>
-          <div class="balance-value"><span id="balance">0</span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="status-bar">
-      <div id="status" class="status-inline">Загрузка...</div>
-    </div>
 
     <!-- ИГРА -->
     <section id="screen-game" class="screen active">
-      <div class="card">
-  <div class="glow-label">Bet Control</div>
-  <div class="section-title">Ставка и начало игры</div>
-  <div class="bet-card">
-    <div class="bet-meta-row">
-      <div class="bet-input-label" style="margin:0;">Введите сумму ставки</div>
-      <div class="bet-chip">BLACKJACK</div>
-    </div>
-
-    <div class="bet-row">
-      <div class="bet-input-wrap">
-        <input
-          id="betInput"
-          class="bet-input"
-          type="number"
-          min="1"
-          step="1"
-          value="50"
-          placeholder="Например 100"
-        />
-      </div>
-
-      <div style="display:flex; align-items:stretch;">
-        <button class="btn btn-green" onclick="startGame()">Новая игра</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-      <div class="card">
-  <div class="glow-label">Main Table</div>
-  <div class="section-title">Игровой стол</div>
-  <div class="table-wrap">
-    <div class="deck-chip">Deck</div>
-
-    <div class="hand-block">
-      <div class="hand-head">
-        <div class="hand-label-wrap">
-          <div class="hand-dot"></div>
-          <div class="hand-title">Дилер</div>
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="brand-row">
+            <div class="brand-badge">🃏</div>
+            <div class="brand-title">Blackjack</div>
+          </div>
+          <div id="playerName" class="player-line">Игрок</div>
         </div>
-        <div class="score-pill">Очки: <span id="dealerScore">0</span></div>
-      </div>
-      <div id="dealerCards" class="cards"></div>
-    </div>
 
-    <div class="game-accent-line"></div>
-
-    <div class="hand-block">
-      <div class="hand-head">
-        <div class="hand-label-wrap">
-          <div class="hand-dot" style="background:#63e69a; box-shadow: 0 0 10px rgba(99,230,154,0.35);"></div>
-          <div class="hand-title">Игрок</div>
+        <div class="balance-pill">
+          <div class="balance-icon">💰</div>
+          <div class="balance-meta">
+            <div class="balance-label">Баланс</div>
+            <div class="balance-value"><span id="balance">0</span></div>
+          </div>
         </div>
-        <div class="score-pill">Очки: <span id="playerScore">0</span></div>
       </div>
-      <div id="playerCards" class="cards"></div>
-    </div>
-  </div>
-</div>
 
-  <div class="deck-chip">Deck</div>
-
-  <div class="hand-block">
-    <div class="hand-head">
-      <div class="hand-label-wrap">
-        <div class="hand-dot"></div>
-        <div class="hand-title">Дилер</div>
+      <div class="status-bar">
+        <div id="status" class="status-inline">Загрузка...</div>
       </div>
-      <div class="score-pill">Очки: <span id="dealerScore">0</span></div>
-    </div>
-    <div id="dealerCards" class="cards"></div>
-  </div>
-
-  <div class="game-accent-line"></div>
-
-  <div class="hand-block">
-    <div class="hand-head">
-      <div class="hand-label-wrap">
-        <div class="hand-dot" style="background:#63e69a; box-shadow: 0 0 10px rgba(99,230,154,0.35);"></div>
-        <div class="hand-title">Игрок</div>
-      </div>
-      <div class="score-pill">Очки: <span id="playerScore">0</span></div>
-    </div>
-    <div id="playerCards" class="cards"></div>
-  </div>
-</div>
-
-
 
       <div class="card">
-  <div class="glow-label">Player Actions</div>
-  <div class="section-title">Действия</div>
-  <div class="action-row">
-    <button id="hitBtn" class="btn btn-blue" onclick="hit()">Взять карту</button>
-    <button id="standBtn" class="btn btn-red" onclick="stand()">Остановиться</button>
-  </div>
-</div>
+        <div class="glow-label">Bet Control</div>
+        <div class="section-title">Ставка и начало игры</div>
+
+        <div class="bet-card">
+          <div class="bet-meta-row">
+            <div class="bet-input-label">Введите сумму ставки</div>
+            <div class="bet-chip">BLACKJACK</div>
+          </div>
+
+          <div class="bet-row">
+            <input
+              id="betInput"
+              class="bet-input"
+              type="number"
+              min="1"
+              step="1"
+              value="50"
+              placeholder="Например 100"
+            />
+
+            <button class="btn btn-green" onclick="startGame()">Новая игра</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="glow-label">Main Table</div>
+        <div class="section-title">Игровой стол</div>
+
+        <div class="table-wrap">
+          <div class="hand-block">
+            <div class="hand-head">
+              <div class="hand-label-wrap">
+                <div class="hand-dot"></div>
+                <div class="hand-title">Дилер</div>
+              </div>
+              <div class="score-pill">Очки: <span id="dealerScore">0</span></div>
+            </div>
+            <div id="dealerCards" class="cards"></div>
+          </div>
+
+          <div class="game-accent-line"></div>
+
+          <div class="hand-block">
+            <div class="hand-head">
+              <div class="hand-label-wrap">
+                <div class="hand-dot" style="background:#63e69a; box-shadow: 0 0 10px rgba(99,230,154,0.35);"></div>
+                <div class="hand-title">Игрок</div>
+              </div>
+              <div class="score-pill">Очки: <span id="playerScore">0</span></div>
+            </div>
+            <div id="playerCards" class="cards"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="glow-label">Player Actions</div>
+        <div class="section-title">Действия</div>
+
+        <div class="action-row">
+          <button id="hitBtn" class="btn btn-blue" onclick="hit()">Взять карту</button>
+          <button id="standBtn" class="btn btn-red" onclick="stand()">Остановиться</button>
+        </div>
+      </div>
     </section>
 
     <!-- ЛИДЕРЫ -->
@@ -738,9 +666,11 @@
     <section id="screen-bonuses" class="screen">
       <div class="card">
         <div class="section-title">🎁 Бонусы</div>
+
         <div class="list-item">
           <div style="font-weight:800; margin-bottom:4px;">Rescue Bonus</div>
           <div class="muted">Доступен только если баланс равен 0 и текущая игра завершена.</div>
+
           <div style="height:12px"></div>
 
           <button id="rescueBtn" class="btn btn-gold" style="display:none;" onclick="rescueBonus()">
@@ -756,19 +686,23 @@
     <section id="screen-profile" class="screen">
       <div class="card">
         <div class="section-title">👤 Профиль</div>
+
         <div class="stats-grid">
           <div class="stat-box">
             <div class="stat-label">Имя</div>
             <div id="profileName" class="stat-value" style="font-size:15px;">Игрок</div>
           </div>
+
           <div class="stat-box">
             <div class="stat-label">Telegram ID</div>
             <div id="profileId" class="stat-value" style="font-size:14px;">—</div>
           </div>
+
           <div class="stat-box">
             <div class="stat-label">Баланс</div>
             <div id="profileBalance" class="stat-value">0</div>
           </div>
+
           <div class="stat-box">
             <div class="stat-label">Последних логов</div>
             <div id="profileLogsCount" class="stat-value">0</div>
@@ -783,6 +717,7 @@
 
       <div id="adminBox" class="card admin-box">
         <div class="section-title">🛠 Админ-панель</div>
+
         <div class="two-grid">
           <input id="adminTargetId" class="bet-input" type="text" placeholder="Telegram ID пользователя" />
           <button class="btn btn-dark" onclick="adminLoadUser()">Найти</button>
