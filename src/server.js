@@ -1,6 +1,17 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import "dotenv/config";
+
+import {
+  initDb,
+  getOrCreateUser,
+  getUserByTelegramId,
+  updateBalance,
+  changeBalance,
+  addGameLog,
+  getUserLogs
+} from "./db.js";
 
 const app = express();
 app.use(express.json());
@@ -10,14 +21,14 @@ const __dirname = path.dirname(__filename);
 
 app.use("/", express.static(path.join(__dirname, "..", "public")));
 
-// ========================
-// Хранилище пользователей
-// ========================
-const users = {};
+const ADMIN_IDS = (process.env.ADMIN_IDS || "")
+  .split(",")
+  .map((x) => x.trim())
+  .filter(Boolean)
+  .map(Number);
 
-// ========================
-// Карты и логика
-// ========================
+const games = {};
+
 const suits = ["♠", "♥", "♦", "♣"];
 const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 
@@ -68,242 +79,358 @@ function formatCard(card) {
 }
 
 function getUserId(req) {
-  const userId = req.body.userId || req.query.userId;
-  return String(userId || "");
+  const id = req.body?.userId ?? req.query?.userId ?? "";
+  return String(id).trim();
 }
 
-function getOrCreateUserState(userId) {
-  if (!userId) return null;
-
-  if (!users[userId]) {
-    users[userId] = {
-      balance: 1000,
+function getGame(userId) {
+  if (!games[userId]) {
+    games[userId] = {
       bet: 50,
       deck: [],
       player: [],
       dealer: [],
       gameOver: true,
-      status: "Нажми 'Новая игра'",
-      logs: []
+      status: "Нажми «Новая игра»"
     };
   }
 
-  return users[userId];
+  return games[userId];
 }
 
-function addLog(state, action, extra = {}) {
-  state.logs.unshift({
-    time: new Date().toLocaleString("ru-RU"),
-    action,
-    balance: state.balance,
-    bet: state.bet,
-    player: state.player.map(formatCard),
-    dealer: state.dealer.map(formatCard),
-    playerScore: calculateScore(state.player),
-    dealerScore: calculateScore(state.dealer),
-    gameOver: state.gameOver,
-    status: state.status,
-    ...extra
-  });
+async function buildState(userId, hideDealerSecondCard = true) {
+  const game = getGame(userId);
+  const dbUser = await getUserByTelegramId(userId);
+  const logs = await getUserLogs(userId, 20);
 
-  if (state.logs.length > 20) {
-    state.logs = state.logs.slice(0, 20);
-  }
-}
-
-function getPublicGameState(state, hideDealerSecondCard = true) {
-  const playerScore = calculateScore(state.player);
+  const playerScore = calculateScore(game.player);
 
   let dealerCards = [];
   let dealerScore = 0;
 
-  if (hideDealerSecondCard && !state.gameOver) {
+  if (hideDealerSecondCard && !game.gameOver) {
     dealerCards = [
-      state.dealer[0] ? formatCard(state.dealer[0]) : "🂠",
+      game.dealer[0] ? formatCard(game.dealer[0]) : "🂠",
       "🂠"
     ];
-    dealerScore = state.dealer[0] ? getCardValue(state.dealer[0]) : 0;
+    dealerScore = game.dealer[0] ? getCardValue(game.dealer[0]) : 0;
   } else {
-    dealerCards = state.dealer.map(formatCard);
-    dealerScore = calculateScore(state.dealer);
+    dealerCards = game.dealer.map(formatCard);
+    dealerScore = calculateScore(game.dealer);
   }
 
   return {
-    balance: state.balance,
-    bet: state.bet,
-    player: state.player.map(formatCard),
+    balance: dbUser?.balance ?? 1000,
+    bet: game.bet,
+    player: game.player.map(formatCard),
     dealer: dealerCards,
     playerScore,
     dealerScore,
-    gameOver: state.gameOver,
-    status: state.status,
-    logs: state.logs
+    gameOver: game.gameOver,
+    status: game.status,
+    logs,
+    canRescueBonus: (dbUser?.balance ?? 0) === 0 && game.gameOver
   };
 }
 
-function dealerTurn(state) {
-  while (calculateScore(state.dealer) < 17) {
-    state.dealer.push(state.deck.pop());
+async function logAction(userId, action) {
+  const game = getGame(userId);
+  const dbUser = await getUserByTelegramId(userId);
+
+  await addGameLog({
+    telegramId: Number(userId),
+    action,
+    status: game.status,
+    bet: game.bet,
+    balance: dbUser?.balance ?? 0,
+    playerCards: game.player.map(formatCard),
+    dealerCards: game.dealer.map(formatCard),
+    playerScore: calculateScore(game.player),
+    dealerScore: calculateScore(game.dealer)
+  });
+}
+
+function dealerTurn(game) {
+  while (calculateScore(game.dealer) < 17) {
+    game.dealer.push(game.deck.pop());
   }
 }
 
-function finishGame(state) {
-  const playerScore = calculateScore(state.player);
-  const dealerScore = calculateScore(state.dealer);
-
-  state.gameOver = true;
-
-  if (playerScore > 21) {
-    state.balance -= state.bet;
-    state.status = `Перебор! Ты проиграл -${state.bet}.`;
-    addLog(state, "finish_bust");
-    return;
-  }
-
-  if (dealerScore > 21) {
-    state.balance += state.bet;
-    state.status = `У дилера перебор! Ты выиграл +${state.bet}.`;
-    addLog(state, "finish_dealer_bust");
-    return;
-  }
-
-  if (playerScore > dealerScore) {
-    state.balance += state.bet;
-    state.status = `Ты выиграл +${state.bet}!`;
-    addLog(state, "finish_win");
-    return;
-  }
-
-  if (playerScore < dealerScore) {
-    state.balance -= state.bet;
-    state.status = `Ты проиграл -${state.bet}.`;
-    addLog(state, "finish_lose");
-    return;
-  }
-
-  state.status = "Ничья.";
-  addLog(state, "finish_push");
+function isAdmin(userId) {
+  return ADMIN_IDS.includes(Number(userId));
 }
 
-// ========================
-// API
-// ========================
-app.post("/api/game/start", (req, res) => {
-  const userId = getUserId(req);
-  const state = getOrCreateUserState(userId);
+app.get("/api/game/state", async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(400).json({ error: "Нет userId" });
 
-  if (!state) {
-    return res.status(400).json({ error: "Нет userId" });
+    await getOrCreateUser(userId, null, null);
+    res.json(await buildState(userId, true));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка сервера" });
   }
-
-  const bet = Number(req.body.bet);
-
-  if (!Number.isFinite(bet) || bet <= 0) {
-    return res.status(400).json({ error: "Некорректная ставка" });
-  }
-
-  if (bet > state.balance) {
-    return res.status(400).json({ error: "Недостаточно баланса" });
-  }
-
-  state.bet = Math.floor(bet);
-  state.deck = createDeck();
-  state.player = [state.deck.pop(), state.deck.pop()];
-  state.dealer = [state.deck.pop(), state.deck.pop()];
-  state.gameOver = false;
-  state.status = "Игра началась. Твой ход.";
-
-  const playerScore = calculateScore(state.player);
-  const dealerScore = calculateScore(state.dealer);
-
-  if (playerScore === 21 && dealerScore === 21) {
-    state.gameOver = true;
-    state.status = "У обоих Blackjack. Ничья.";
-    addLog(state, "start_double_blackjack");
-    return res.json(getPublicGameState(state, false));
-  }
-
-  if (playerScore === 21) {
-    state.gameOver = true;
-    const blackjackWin = Math.floor(state.bet * 1.5);
-    state.balance += blackjackWin;
-    state.status = `Blackjack! Ты выиграл +${blackjackWin}!`;
-    addLog(state, "start_player_blackjack", { blackjackWin });
-    return res.json(getPublicGameState(state, false));
-  }
-
-  if (dealerScore === 21) {
-    state.gameOver = true;
-    state.balance -= state.bet;
-    state.status = `У дилера Blackjack. Ты проиграл -${state.bet}.`;
-    addLog(state, "start_dealer_blackjack");
-    return res.json(getPublicGameState(state, false));
-  }
-
-  addLog(state, "start_game");
-  res.json(getPublicGameState(state, true));
 });
 
-app.post("/api/game/hit", (req, res) => {
-  const userId = getUserId(req);
-  const state = getOrCreateUserState(userId);
+app.post("/api/game/start", async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(400).json({ error: "Нет userId" });
 
-  if (!state) {
-    return res.status(400).json({ error: "Нет userId" });
+    const username = req.body.username || null;
+    const firstName = req.body.firstName || null;
+    const bet = Number(req.body.bet);
+
+    const dbUser = await getOrCreateUser(userId, username, firstName);
+
+    if (!Number.isFinite(bet) || bet <= 0) {
+      return res.status(400).json({ error: "Некорректная ставка" });
+    }
+
+    if (!Number.isInteger(bet)) {
+      return res.status(400).json({ error: "Ставка должна быть целым числом" });
+    }
+
+    if (bet > dbUser.balance) {
+      return res.status(400).json({ error: "Недостаточно баланса" });
+    }
+
+    const game = getGame(userId);
+    game.bet = bet;
+    game.deck = createDeck();
+    game.player = [game.deck.pop(), game.deck.pop()];
+    game.dealer = [game.deck.pop(), game.deck.pop()];
+    game.gameOver = false;
+    game.status = "Игра началась. Твой ход.";
+
+    const playerScore = calculateScore(game.player);
+    const dealerScore = calculateScore(game.dealer);
+
+    if (playerScore === 21 && dealerScore === 21) {
+      game.gameOver = true;
+      game.status = "У обоих Blackjack. Ничья.";
+      await logAction(userId, "start_double_blackjack");
+      return res.json(await buildState(userId, false));
+    }
+
+    if (playerScore === 21) {
+      game.gameOver = true;
+      const blackjackWin = Math.floor(game.bet * 1.5);
+      await updateBalance(userId, dbUser.balance + blackjackWin);
+      game.status = `Blackjack! Ты выиграл +${blackjackWin}!`;
+      await logAction(userId, "start_player_blackjack");
+      return res.json(await buildState(userId, false));
+    }
+
+    if (dealerScore === 21) {
+      game.gameOver = true;
+      await updateBalance(userId, dbUser.balance - game.bet);
+      game.status = `У дилера Blackjack. Ты проиграл -${game.bet}.`;
+      await logAction(userId, "start_dealer_blackjack");
+      return res.json(await buildState(userId, false));
+    }
+
+    await logAction(userId, "start_game");
+    res.json(await buildState(userId, true));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка сервера" });
   }
-
-  if (state.gameOver) {
-    return res.status(400).json({ error: "Игра уже завершена" });
-  }
-
-  state.player.push(state.deck.pop());
-
-  const playerScore = calculateScore(state.player);
-
-  if (playerScore > 21) {
-    state.gameOver = true;
-    state.balance -= state.bet;
-    state.status = `Перебор! Ты проиграл -${state.bet}.`;
-    addLog(state, "hit_bust");
-    return res.json(getPublicGameState(state, false));
-  }
-
-  state.status = "Ты взял карту.";
-  addLog(state, "hit");
-  res.json(getPublicGameState(state, true));
 });
 
-app.post("/api/game/stand", (req, res) => {
-  const userId = getUserId(req);
-  const state = getOrCreateUserState(userId);
+app.post("/api/game/hit", async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(400).json({ error: "Нет userId" });
 
-  if (!state) {
-    return res.status(400).json({ error: "Нет userId" });
+    const dbUser = await getOrCreateUser(userId, null, null);
+    const game = getGame(userId);
+
+    if (game.gameOver) {
+      return res.status(400).json({ error: "Игра уже завершена" });
+    }
+
+    if (!game.deck.length) {
+      return res.status(400).json({ error: "Игра не начата" });
+    }
+
+    game.player.push(game.deck.pop());
+
+    const playerScore = calculateScore(game.player);
+
+    if (playerScore > 21) {
+      game.gameOver = true;
+      await updateBalance(userId, dbUser.balance - game.bet);
+      game.status = `Перебор! Ты проиграл -${game.bet}.`;
+      await logAction(userId, "hit_bust");
+      return res.json(await buildState(userId, false));
+    }
+
+    game.status = "Ты взял карту.";
+    await logAction(userId, "hit");
+    res.json(await buildState(userId, true));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка сервера" });
   }
-
-  if (state.gameOver) {
-    return res.status(400).json({ error: "Игра уже завершена" });
-  }
-
-  dealerTurn(state);
-  addLog(state, "dealer_turn");
-  finishGame(state);
-
-  res.json(getPublicGameState(state, false));
 });
 
-app.get("/api/game/state", (req, res) => {
-  const userId = getUserId(req);
-  const state = getOrCreateUserState(userId);
+app.post("/api/game/stand", async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(400).json({ error: "Нет userId" });
 
-  if (!state) {
-    return res.status(400).json({ error: "Нет userId" });
+    const dbUser = await getOrCreateUser(userId, null, null);
+    const game = getGame(userId);
+
+    if (game.gameOver) {
+      return res.status(400).json({ error: "Игра уже завершена" });
+    }
+
+    if (!game.deck.length) {
+      return res.status(400).json({ error: "Игра не начата" });
+    }
+
+    dealerTurn(game);
+
+    const playerScore = calculateScore(game.player);
+    const dealerScore = calculateScore(game.dealer);
+
+    game.gameOver = true;
+
+    if (dealerScore > 21) {
+      await updateBalance(userId, dbUser.balance + game.bet);
+      game.status = `У дилера перебор! Ты выиграл +${game.bet}.`;
+      await logAction(userId, "finish_dealer_bust");
+      return res.json(await buildState(userId, false));
+    }
+
+    if (playerScore > dealerScore) {
+      await updateBalance(userId, dbUser.balance + game.bet);
+      game.status = `Ты выиграл +${game.bet}!`;
+      await logAction(userId, "finish_win");
+      return res.json(await buildState(userId, false));
+    }
+
+    if (playerScore < dealerScore) {
+      await updateBalance(userId, dbUser.balance - game.bet);
+      game.status = `Ты проиграл -${game.bet}.`;
+      await logAction(userId, "finish_lose");
+      return res.json(await buildState(userId, false));
+    }
+
+    game.status = "Ничья.";
+    await logAction(userId, "finish_push");
+    res.json(await buildState(userId, false));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка сервера" });
   }
+});
 
-  res.json(getPublicGameState(state, true));
+app.post("/api/bonus/rescue", async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(400).json({ error: "Нет userId" });
+
+    const dbUser = await getOrCreateUser(userId, null, null);
+    const game = getGame(userId);
+
+    if (dbUser.balance !== 0) {
+      return res.status(400).json({ error: "Rescue bonus доступен только при балансе 0" });
+    }
+
+    if (!game.gameOver) {
+      return res.status(400).json({ error: "Нельзя получать бонус во время активной игры" });
+    }
+
+    await updateBalance(userId, 1000);
+    game.status = "Ты получил rescue bonus: +1000";
+    await logAction(userId, "rescue_bonus");
+
+    res.json(await buildState(userId, true));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+app.post("/api/admin/user", async (req, res) => {
+  try {
+    const adminId = getUserId(req);
+
+    if (!isAdmin(adminId)) {
+      return res.status(403).json({ error: "Нет доступа" });
+    }
+
+    const targetId = String(req.body.targetId || "").trim();
+    if (!targetId) {
+      return res.status(400).json({ error: "Нет targetId" });
+    }
+
+    const user = await getUserByTelegramId(targetId);
+    if (!user) {
+      return res.status(404).json({ error: "Пользователь не найден" });
+    }
+
+    const logs = await getUserLogs(targetId, 20);
+
+    res.json({ user, logs });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+app.post("/api/admin/balance", async (req, res) => {
+  try {
+    const adminId = getUserId(req);
+
+    if (!isAdmin(adminId)) {
+      return res.status(403).json({ error: "Нет доступа" });
+    }
+
+    const targetId = String(req.body.targetId || "").trim();
+    const amount = Number(req.body.amount);
+
+    if (!targetId || !Number.isFinite(amount)) {
+      return res.status(400).json({ error: "Некорректные данные" });
+    }
+
+    const updated = await changeBalance(targetId, amount);
+
+    if (!updated) {
+      return res.status(404).json({ error: "Пользователь не найден" });
+    }
+
+    await addGameLog({
+      telegramId: Number(targetId),
+      action: "admin_balance_change",
+      status: `Админ изменил баланс на ${amount}`,
+      bet: 0,
+      balance: updated.balance,
+      playerCards: [],
+      dealerCards: [],
+      playerScore: 0,
+      dealerScore: 0
+    });
+
+    res.json({ user: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("DB init error:", err);
+  });
