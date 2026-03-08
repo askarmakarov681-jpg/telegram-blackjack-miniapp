@@ -195,7 +195,7 @@ app.post("/api/game/start", async (req, res) => {
       return res.status(400).json({ error: "Некорректная ставка" });
     }
 
-    if (bet > 10000) {
+    if (bet > 1000000) {
       return res.status(400).json({ error: "Слишком большая ставка" });
     }
 
