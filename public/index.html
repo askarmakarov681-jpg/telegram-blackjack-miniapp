@@ -554,7 +554,152 @@
         font-size: 20px;
       }
     }
+
+    .screen {
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  position: absolute;
+  width: calc(100% - 24px);
+  max-width: 560px;
+}
+
+.screen.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  position: relative;
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease;
+}
+
+.app {
+  position: relative;
+}
+
+.card {
+  animation: fadeUp 0.35s ease;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.playing-card {
+  opacity: 0;
+  transform: translateY(16px) scale(0.96);
+  animation: dealCard 0.35s ease forwards;
+}
+
+.playing-card:nth-child(1) { animation-delay: 0.02s; }
+.playing-card:nth-child(2) { animation-delay: 0.07s; }
+.playing-card:nth-child(3) { animation-delay: 0.12s; }
+.playing-card:nth-child(4) { animation-delay: 0.17s; }
+.playing-card:nth-child(5) { animation-delay: 0.22s; }
+.playing-card:nth-child(6) { animation-delay: 0.27s; }
+
+@keyframes dealCard {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.status-inline {
+  animation: statusPulseIn 0.25s ease;
+}
+
+@keyframes statusPulseIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-btn {
+  transition:
+    transform 0.12s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.tab-btn:active {
+  transform: scale(0.96);
+}
+
+.btn {
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease,
+    filter 0.18s ease;
+}
+
+.btn:hover {
+  filter: brightness(1.03);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.list-item,
+.stat-box,
+.bet-card,
+.table-wrap {
+  animation: softIn 0.3s ease;
+}
+
+@keyframes softIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.screen-transition-out {
+  opacity: 0 !important;
+  transform: translateY(8px) !important;
+}
+
+.score-pill,
+.balance-pill,
+.bet-chip {
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.score-pill.flash,
+.balance-pill.flash,
+.bet-chip.flash {
+  transform: scale(1.04);
+}
+
   </style>
+
 </head>
 <body>
   <div class="app">
@@ -779,16 +924,35 @@
     let currentState = null;
 
     function switchScreen(screenName, btnEl) {
-      document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
-      document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+  const screens = document.querySelectorAll(".screen");
+  const tabs = document.querySelectorAll(".tab-btn");
+  const nextScreen = document.getElementById(`screen-${screenName}`);
 
-      document.getElementById(`screen-${screenName}`).classList.add("active");
-      if (btnEl) btnEl.classList.add("active");
-
-      if (screenName === "leaders") {
-        loadLeaderboard();
-      }
+  screens.forEach(el => {
+    if (el.classList.contains("active")) {
+      el.classList.add("screen-transition-out");
+      setTimeout(() => {
+        el.classList.remove("active");
+        el.classList.remove("screen-transition-out");
+      }, 180);
+    } else {
+      el.classList.remove("active");
+      el.classList.remove("screen-transition-out");
     }
+  });
+
+  tabs.forEach(el => el.classList.remove("active"));
+
+  setTimeout(() => {
+    nextScreen.classList.add("active");
+  }, 120);
+
+  if (btnEl) btnEl.classList.add("active");
+
+  if (screenName === "leaders") {
+    loadLeaderboard();
+  }
+}
 
     async function api(url, method = "GET", body = null) {
       const options = {
@@ -811,21 +975,22 @@
     }
 
     function renderCards(containerId, cards) {
-      const el = document.getElementById(containerId);
-      el.innerHTML = "";
+  const el = document.getElementById(containerId);
+  el.innerHTML = "";
 
-      if (!cards || !cards.length) {
-        el.innerHTML = `<div class="empty-cards">Нет карт</div>`;
-        return;
-      }
+  if (!cards || !cards.length) {
+    el.innerHTML = `<div class="empty-cards">Нет карт</div>`;
+    return;
+  }
 
-      cards.forEach(card => {
-        const div = document.createElement("div");
-        div.className = "playing-card";
-        div.textContent = card;
-        el.appendChild(div);
-      });
-    }
+  cards.forEach((card, index) => {
+    const div = document.createElement("div");
+    div.className = "playing-card";
+    div.textContent = card;
+    div.style.animationDelay = `${0.04 + index * 0.06}s`;
+    el.appendChild(div);
+  });
+}
 
     function renderLogs(logs) {
       const box = document.getElementById("logs");
@@ -876,42 +1041,64 @@
     }
 
     function renderState(state) {
-      currentState = state;
+  currentState = state;
 
-      document.getElementById("balance").textContent = state.balance;
-      document.getElementById("profileBalance").textContent = state.balance;
-      document.getElementById("profileLogsCount").textContent = (state.logs || []).length;
-      document.getElementById("status").textContent = state.status;
+  const balanceEl = document.getElementById("balance");
+  const balancePill = document.querySelector(".balance-pill");
+  const statusEl = document.getElementById("status");
+  const dealerScoreEl = document.getElementById("dealerScore");
+  const playerScoreEl = document.getElementById("playerScore");
+  const profileBalanceEl = document.getElementById("profileBalance");
+  const profileLogsCountEl = document.getElementById("profileLogsCount");
 
-      document.getElementById("playerScore").textContent = state.playerScore;
-      document.getElementById("dealerScore").textContent = state.dealerScore;
-      document.getElementById("betInput").value = state.bet;
+  balanceEl.textContent = state.balance;
+  profileBalanceEl.textContent = state.balance;
+  profileLogsCountEl.textContent = (state.logs || []).length;
 
-      renderCards("playerCards", state.player);
-      renderCards("dealerCards", state.dealer);
-      renderLogs(state.logs);
+  statusEl.classList.remove("status-inline");
+  void statusEl.offsetWidth;
+  statusEl.textContent = state.status;
+  statusEl.classList.add("status-inline");
 
-      document.getElementById("hitBtn").disabled = state.gameOver;
-      document.getElementById("standBtn").disabled = state.gameOver;
+  dealerScoreEl.textContent = state.dealerScore;
+  playerScoreEl.textContent = state.playerScore;
+  document.getElementById("betInput").value = state.bet;
 
-      const rescueBtn = document.getElementById("rescueBtn");
-      const rescueHint = document.getElementById("rescueHint");
+  balancePill.classList.remove("flash");
+  void balancePill.offsetWidth;
+  balancePill.classList.add("flash");
 
-      if (state.canRescueBonus) {
-        rescueBtn.style.display = "block";
-        rescueHint.style.display = "none";
-      } else {
-        rescueBtn.style.display = "none";
-        rescueHint.style.display = "block";
-      }
+  document.querySelectorAll(".score-pill").forEach(el => {
+    el.classList.remove("flash");
+    void el.offsetWidth;
+    el.classList.add("flash");
+  });
 
-      const adminIds = [1011931325];
-      if (adminIds.includes(Number(userId))) {
-        document.getElementById("adminBox").classList.add("show");
-      } else {
-        document.getElementById("adminBox").classList.remove("show");
-      }
-    }
+  renderCards("playerCards", state.player);
+  renderCards("dealerCards", state.dealer);
+  renderLogs(state.logs);
+
+  document.getElementById("hitBtn").disabled = state.gameOver;
+  document.getElementById("standBtn").disabled = state.gameOver;
+
+  const rescueBtn = document.getElementById("rescueBtn");
+  const rescueHint = document.getElementById("rescueHint");
+
+  if (state.canRescueBonus) {
+    rescueBtn.style.display = "block";
+    rescueHint.style.display = "none";
+  } else {
+    rescueBtn.style.display = "none";
+    rescueHint.style.display = "block";
+  }
+
+  const adminIds = [1011931325];
+  if (adminIds.includes(Number(userId))) {
+    document.getElementById("adminBox").classList.add("show");
+  } else {
+    document.getElementById("adminBox").classList.remove("show");
+  }
+}
 
     async function loadState() {
       try {
@@ -1000,15 +1187,18 @@
     }
 
     async function loadLeaderboard() {
-      try {
-        const res = await fetch("/api/leaderboard");
-        const data = await res.json();
-        renderLeaderboard(data);
-      } catch (e) {
-        document.getElementById("leaderboard").innerHTML =
-          `<div class="list-item muted">Не удалось загрузить лидеров</div>`;
-      }
-    }
+  try {
+    const box = document.getElementById("leaderboard");
+    box.innerHTML = `<div class="list-item muted">Загрузка...</div>`;
+
+    const res = await fetch("/api/leaderboard");
+    const data = await res.json();
+    renderLeaderboard(data);
+  } catch (e) {
+    document.getElementById("leaderboard").innerHTML =
+      `<div class="list-item muted">Не удалось загрузить лидеров</div>`;
+  }
+}
 
     function escapeHtml(str) {
       return String(str)
