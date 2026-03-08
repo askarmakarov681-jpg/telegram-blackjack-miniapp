@@ -1,3 +1,4 @@
+import { validate } from "@telegram-apps/init-data-node";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -15,6 +16,27 @@ import {
 
 const app = express();
 app.use(express.json());
+function verifyTelegram(req, res, next) {
+
+  try {
+
+    const initData = req.headers["x-telegram-init-data"];
+
+    if (!initData) {
+      return res.status(403).json({ error: "No telegram auth" });
+    }
+
+    const data = validate(initData, process.env.BOT_TOKEN);
+
+    req.telegramUser = data.user;
+
+    next();
+
+  } catch (err) {
+
+    return res.status(403).json({ error: "Invalid telegram auth" });
+  }
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,7 +50,7 @@ const ADMIN_IDS = (process.env.ADMIN_IDS || "")
   .map(Number);
 
 const games = {};
-
+const lastAction = {};
 const suits = ["♠", "♥", "♦", "♣"];
 const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 
@@ -80,7 +102,7 @@ function formatCard(card) {
 
 function getUserId(req) {
   const id = req.body?.userId ?? req.query?.userId ?? "";
-  return String(id).trim();
+  return String(id);
 }
 
 function getGame(userId) {
@@ -173,7 +195,16 @@ app.get("/api/game/state", async (req, res) => {
   }
 });
 
-app.post("/api/game/start", async (req, res) => {
+app.post("/api/game/start", verifyTelegram, async (req, res) => {
+  
+  const now = Date.now();
+
+    if (lastAction[userId] && now - lastAction[userId] < 1000) {
+      return res.status(429).json({ error: "Слишком быстро" });
+    }
+
+    lastAction[userId] = now;
+  
   try {
     const userId = getUserId(req);
     if (!userId) return res.status(400).json({ error: "Нет userId" });
@@ -187,7 +218,9 @@ app.post("/api/game/start", async (req, res) => {
     if (!Number.isFinite(bet) || bet <= 0) {
       return res.status(400).json({ error: "Некорректная ставка" });
     }
-
+    if (bet > 10000) {
+      return res.status(400).json({ error: "Слишком большая ставка" });
+    }
     if (!Number.isInteger(bet)) {
       return res.status(400).json({ error: "Ставка должна быть целым числом" });
     }
@@ -239,7 +272,7 @@ app.post("/api/game/start", async (req, res) => {
   }
 });
 
-app.post("/api/game/hit", async (req, res) => {
+app.post("/api/game/hit", verifyTelegram, async (req, res) => {
   try {
     const userId = getUserId(req);
     if (!userId) return res.status(400).json({ error: "Нет userId" });
@@ -276,7 +309,7 @@ app.post("/api/game/hit", async (req, res) => {
   }
 });
 
-app.post("/api/game/stand", async (req, res) => {
+app.post("/api/game/stand", verifyTelegram, async (req, res) => {
   try {
     const userId = getUserId(req);
     if (!userId) return res.status(400).json({ error: "Нет userId" });
@@ -329,7 +362,7 @@ app.post("/api/game/stand", async (req, res) => {
   }
 });
 
-app.post("/api/bonus/rescue", async (req, res) => {
+app.post("/api/bonus/rescue", verifyTelegram, async (req, res) => {
   try {
     const userId = getUserId(req);
     if (!userId) return res.status(400).json({ error: "Нет userId" });
@@ -356,7 +389,7 @@ app.post("/api/bonus/rescue", async (req, res) => {
   }
 });
 
-app.post("/api/admin/user", async (req, res) => {
+app.post("/api/admin/user", verifyTelegram, async (req, res) => {
   try {
     const adminId = getUserId(req);
 
@@ -383,7 +416,20 @@ app.post("/api/admin/user", async (req, res) => {
   }
 });
 
-app.post("/api/admin/balance", async (req, res) => {
+app.get("/api/leaderboard", async (req, res) => {
+
+  const { rows } = await pool.query(`
+    SELECT telegram_id, balance
+    FROM users
+    ORDER BY balance DESC
+    LIMIT 10
+  `);
+
+  res.json(rows);
+
+});
+
+app.post("/api/admin/balance", verifyTelegram, async (req, res) => {
   try {
     const adminId = getUserId(req);
 
