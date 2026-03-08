@@ -8,29 +8,41 @@
   <style>
     * {
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
     :root {
-      --bg: #0b0b0b;
-      --panel: #171717;
-      --panel-2: #202020;
-      --panel-3: #111111;
-      --text: #ffffff;
-      --muted: #bdbdbd;
+      --bg: #091018;
+      --bg-2: #0d141d;
+      --panel: rgba(20, 26, 35, 0.94);
+      --panel-2: rgba(28, 35, 46, 0.96);
+      --panel-3: rgba(16, 21, 28, 0.96);
       --line: rgba(255,255,255,0.06);
-      --accent: #2ecc71;
-      --accent-2: #3498db;
-      --danger: #e74c3c;
-      --gold: #f1c40f;
+      --line-2: rgba(255,255,255,0.09);
+      --text: #ffffff;
+      --muted: #9eabb8;
+      --green: #2ecc71;
+      --green-2: #1f9d57;
+      --blue: #3b82f6;
+      --red: #ef4444;
+      --gold: #f5c451;
+      --shadow: 0 10px 30px rgba(0,0,0,0.28);
+      --radius: 18px;
+      --radius-sm: 14px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    html, body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top, #112131 0%, #091018 48%, #060b11 100%);
+      color: var(--text);
+      font-family: Inter, Arial, sans-serif;
+      min-height: 100%;
     }
 
     body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Arial, sans-serif;
-      min-height: 100vh;
-      padding: 14px 14px 90px;
+      padding: 12px 12px calc(86px + var(--safe-bottom));
     }
 
     .app {
@@ -38,58 +50,103 @@
       margin: 0 auto;
     }
 
-    .header {
-      background: linear-gradient(180deg, #1a1a1a 0%, #121212 100%);
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(180deg, rgba(17, 24, 33, 0.96) 0%, rgba(13, 18, 26, 0.98) 100%);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
       border-radius: 18px;
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 0 0 1px var(--line);
+      padding: 12px 14px;
+      margin-bottom: 12px;
     }
 
-    .header-top {
+    .topbar-left {
+      min-width: 0;
+    }
+
+    .brand-row {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
     }
 
-    .title {
-      font-size: 24px;
-      font-weight: 700;
-      margin: 0 0 6px;
+    .brand-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #ffffff 0%, #dce6f1 100%);
+      color: #111;
+      font-size: 16px;
+      flex: 0 0 auto;
     }
 
-    .subtitle {
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-line {
+      margin-top: 3px;
+      font-size: 12px;
       color: var(--muted);
-      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .balance-box {
-      text-align: right;
-      background: rgba(255,255,255,0.04);
-      border-radius: 14px;
+    .balance-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
       padding: 10px 12px;
-      min-width: 120px;
+      min-width: 116px;
+      justify-content: flex-end;
+    }
+
+    .balance-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .balance-meta {
+      text-align: right;
     }
 
     .balance-label {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
-      margin-bottom: 4px;
+      margin-bottom: 1px;
     }
 
     .balance-value {
-      font-size: 22px;
-      font-weight: 700;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.1;
     }
 
     .status-bar {
-      margin-top: 12px;
-      padding: 12px;
-      background: rgba(255,255,255,0.04);
-      border-radius: 12px;
-      color: #e2e2e2;
-      font-size: 14px;
+      margin-bottom: 12px;
+      background: linear-gradient(180deg, rgba(20,26,35,0.92) 0%, rgba(14,19,26,0.96) 100%);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 11px 13px;
+      color: #dce5ed;
+      font-size: 13px;
+      box-shadow: var(--shadow);
     }
 
     .screen {
@@ -101,17 +158,19 @@
     }
 
     .card {
-      background: var(--panel);
-      border-radius: 18px;
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 0 0 1px var(--line);
+      background: linear-gradient(180deg, rgba(20,26,35,0.96) 0%, rgba(13,18,26,0.98) 100%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 12px;
     }
 
     .section-title {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 16px;
+      font-weight: 800;
       margin: 0 0 12px;
+      letter-spacing: 0.2px;
     }
 
     .muted {
@@ -119,126 +178,199 @@
       font-size: 13px;
     }
 
-    .table-zone {
-      background:
-        radial-gradient(circle at center, rgba(46, 204, 113, 0.18), transparent 60%),
-        linear-gradient(180deg, #133321 0%, #0f2518 100%);
-      border-radius: 24px;
-      padding: 18px;
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.05),
-        inset 0 20px 40px rgba(0,0,0,0.18);
-    }
-
-    .hand-block + .hand-block {
-      margin-top: 18px;
-    }
-
-    .hand-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .hand-title {
-      font-size: 16px;
-      font-weight: 700;
-    }
-
-    .score-badge {
-      background: rgba(0,0,0,0.28);
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 13px;
-    }
-
-    .cards {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      min-height: 86px;
-    }
-
-    .playing-card {
-      width: 58px;
-      height: 80px;
-      border-radius: 12px;
-      background: #fff;
-      color: #111;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      font-weight: 700;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-    }
-
-    .empty-cards {
-      color: rgba(255,255,255,0.7);
-      font-size: 13px;
-      padding-top: 24px;
-    }
-
-    .bet-grid,
-    .action-grid,
-    .two-grid {
+    .bet-row {
       display: grid;
+      grid-template-columns: 1fr 138px;
       gap: 10px;
     }
 
-    .bet-grid {
-      grid-template-columns: repeat(3, 1fr);
+    .bet-input-wrap {
+      position: relative;
     }
 
-    .action-grid,
-    .two-grid {
-      grid-template-columns: repeat(2, 1fr);
+    .bet-input-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
     }
 
-    input,
-    button {
+    .bet-input {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      border-radius: 14px;
+      padding: 15px 16px;
+      font-size: 16px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .btn {
       width: 100%;
       border: none;
       border-radius: 14px;
       padding: 14px;
       font-size: 15px;
-    }
-
-    input {
-      background: #242424;
-      color: #fff;
-      outline: none;
-    }
-
-    button {
+      font-weight: 800;
       cursor: pointer;
-      font-weight: 700;
+      transition: transform 0.08s ease, opacity 0.12s ease;
     }
 
-    .btn-dark {
-      background: #2a2a2a;
-      color: #fff;
+    .btn:active {
+      transform: scale(0.985);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
     }
 
     .btn-green {
-      background: var(--accent);
-      color: #111;
+      background: linear-gradient(180deg, #37dc82 0%, #25b567 100%);
+      color: #09130d;
     }
 
     .btn-blue {
-      background: var(--accent-2);
+      background: linear-gradient(180deg, #4c92ff 0%, #2f73dd 100%);
       color: #fff;
     }
 
     .btn-red {
-      background: var(--danger);
+      background: linear-gradient(180deg, #ff6666 0%, #dd3f3f 100%);
       color: #fff;
     }
 
     .btn-gold {
+      background: linear-gradient(180deg, #ffd774 0%, #f0b940 100%);
+      color: #241b08;
+    }
+
+    .btn-dark {
+      background: linear-gradient(180deg, #2b3440 0%, #1f2731 100%);
+      color: #fff;
+    }
+
+    .table-wrap {
+      position: relative;
+      overflow: hidden;
+      padding: 16px;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(62, 255, 145, 0.16) 0%, rgba(27, 122, 74, 0.12) 26%, transparent 58%),
+        radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 65%),
+        linear-gradient(180deg, #103023 0%, #0c2419 100%);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.03),
+        inset 0 20px 40px rgba(255,255,255,0.02),
+        inset 0 -30px 50px rgba(0,0,0,0.22);
+    }
+
+    .table-wrap::before {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    .deck-chip {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(0,0,0,0.24);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 11px;
+      color: #dce6dd;
+    }
+
+    .hand-block + .hand-block {
+      margin-top: 22px;
+    }
+
+    .hand-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .hand-label-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hand-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
       background: var(--gold);
-      color: #111;
+      box-shadow: 0 0 10px rgba(245,196,81,0.4);
+    }
+
+    .hand-title {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .score-pill {
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #ecf4ee;
+      white-space: nowrap;
+    }
+
+    .cards {
+      min-height: 84px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .playing-card {
+      width: 58px;
+      height: 80px;
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, #ffffff 0%, #e8edf2 100%);
+      color: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      box-shadow:
+        0 10px 24px rgba(0,0,0,0.24),
+        inset 0 1px 0 rgba(255,255,255,0.8);
+      user-select: none;
+    }
+
+    .empty-cards {
+      color: rgba(238,246,240,0.72);
+      font-size: 13px;
+      padding-top: 22px;
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .two-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
     }
 
     .list {
@@ -248,7 +380,8 @@
     }
 
     .list-item {
-      background: var(--panel-2);
+      background: linear-gradient(180deg, rgba(35,43,55,0.96) 0%, rgba(24,30,38,0.98) 100%);
+      border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
     }
@@ -267,20 +400,22 @@
     }
 
     .stat-box {
-      background: var(--panel-2);
-      border-radius: 14px;
-      padding: 14px;
+      background: linear-gradient(180deg, rgba(31,39,50,0.96) 0%, rgba(21,27,35,0.98) 100%);
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 13px;
     }
 
     .stat-label {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
       margin-bottom: 6px;
     }
 
     .stat-value {
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.2;
     }
 
     .tabbar {
@@ -288,10 +423,11 @@
       left: 0;
       right: 0;
       bottom: 0;
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-      background: rgba(10,10,10,0.94);
+      padding: 8px 12px calc(8px + var(--safe-bottom));
+      background: rgba(8, 12, 18, 0.94);
       backdrop-filter: blur(12px);
       border-top: 1px solid rgba(255,255,255,0.06);
+      z-index: 20;
     }
 
     .tabbar-inner {
@@ -303,18 +439,22 @@
     }
 
     .tab-btn {
-      background: #1e1e1e;
-      color: #d7d7d7;
+      border: none;
       border-radius: 14px;
-      padding: 12px 8px;
-      font-size: 12px;
+      padding: 10px 8px;
+      background: rgba(255,255,255,0.04);
+      color: #ced7e1;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.2;
       text-align: center;
+      cursor: pointer;
     }
 
     .tab-btn.active {
-      background: #2a2a2a;
+      background: linear-gradient(180deg, rgba(49,63,79,0.96) 0%, rgba(31,40,50,0.98) 100%);
       color: #fff;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
     }
 
     .admin-box {
@@ -329,42 +469,96 @@
       margin: 0;
       white-space: pre-wrap;
       word-break: break-word;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      color: #cfd8e2;
+    }
+
+    @media (max-width: 430px) {
+      .topbar {
+        padding: 10px 12px;
+      }
+
+      .brand-title {
+        font-size: 16px;
+      }
+
+      .balance-value {
+        font-size: 16px;
+      }
+
+      .bet-row {
+        grid-template-columns: 1fr 122px;
+      }
+
+      .playing-card {
+        width: 54px;
+        height: 76px;
+        font-size: 20px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <div class="header">
-      <div class="header-top">
-        <div>
-          <h1 class="title">🃏 Blackjack</h1>
-          <div id="playerName" class="subtitle">Игрок</div>
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="brand-row">
+          <div class="brand-badge">🃏</div>
+          <div class="brand-title">Blackjack</div>
         </div>
-        <div class="balance-box">
+        <div id="playerName" class="player-line">Игрок</div>
+      </div>
+
+      <div class="balance-pill">
+        <div class="balance-icon">💰</div>
+        <div class="balance-meta">
           <div class="balance-label">Баланс</div>
-          <div class="balance-value">💰 <span id="balance">0</span></div>
+          <div class="balance-value"><span id="balance">0</span></div>
         </div>
       </div>
-      <div id="status" class="status-bar">Загрузка...</div>
     </div>
 
-    <!-- ЭКРАН ИГРЫ -->
+    <div id="status" class="status-bar">Загрузка...</div>
+
+    <!-- ИГРА -->
     <section id="screen-game" class="screen active">
       <div class="card">
+        <div class="section-title">Ставка</div>
+        <div class="bet-row">
+          <div class="bet-input-wrap">
+            <div class="bet-input-label">Введите сумму ставки</div>
+            <input id="betInput" class="bet-input" type="number" min="1" step="1" value="50" placeholder="Например 100" />
+          </div>
+          <div style="display:flex; align-items:end;">
+            <button class="btn btn-green" onclick="startGame()">Новая игра</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
         <div class="section-title">Игровой стол</div>
-        <div class="table-zone">
+        <div class="table-wrap">
+          <div class="deck-chip">Deck</div>
+
           <div class="hand-block">
             <div class="hand-head">
-              <div class="hand-title">Дилер</div>
-              <div class="score-badge">Очки: <span id="dealerScore">0</span></div>
+              <div class="hand-label-wrap">
+                <div class="hand-dot"></div>
+                <div class="hand-title">Дилер</div>
+              </div>
+              <div class="score-pill">Очки: <span id="dealerScore">0</span></div>
             </div>
             <div id="dealerCards" class="cards"></div>
           </div>
 
           <div class="hand-block">
             <div class="hand-head">
-              <div class="hand-title">Игрок</div>
-              <div class="score-badge">Очки: <span id="playerScore">0</span></div>
+              <div class="hand-label-wrap">
+                <div class="hand-dot" style="background:#63e69a; box-shadow: 0 0 10px rgba(99,230,154,0.35);"></div>
+                <div class="hand-title">Игрок</div>
+              </div>
+              <div class="score-pill">Очки: <span id="playerScore">0</span></div>
             </div>
             <div id="playerCards" class="cards"></div>
           </div>
@@ -372,76 +566,55 @@
       </div>
 
       <div class="card">
-        <div class="section-title">Ставка</div>
-        <div class="bet-grid">
-          <input id="betInput" type="number" min="1" step="1" value="50" />
-          <button class="btn-dark" onclick="setBet(50)">50</button>
-          <button class="btn-dark" onclick="setBet(100)">100</button>
-        </div>
-        <div style="height:10px"></div>
-        <div class="bet-grid">
-          <button class="btn-dark" onclick="setBet(250)">250</button>
-          <button class="btn-dark" onclick="setBet(500)">500</button>
-          <button class="btn-green" onclick="startGame()">Новая игра</button>
-        </div>
-      </div>
-
-      <div class="card">
         <div class="section-title">Действия</div>
-        <div class="action-grid">
-          <button id="hitBtn" class="btn-blue" onclick="hit()">Взять</button>
-          <button id="standBtn" class="btn-red" onclick="stand()">Стоп</button>
+        <div class="action-row">
+          <button id="hitBtn" class="btn btn-blue" onclick="hit()">Взять</button>
+          <button id="standBtn" class="btn btn-red" onclick="stand()">Стоп</button>
         </div>
       </div>
     </section>
 
-    <!-- ЭКРАН ЛИДЕРОВ -->
+    <!-- ЛИДЕРЫ -->
     <section id="screen-leaders" class="screen">
       <div class="card">
-        <div class="row-between">
-          <div class="section-title" style="margin-bottom:0;">🏆 Лидеры</div>
-          <button class="btn-dark" style="width:auto;padding:10px 14px;" onclick="loadLeaderboard()">Обновить</button>
+        <div class="row-between" style="margin-bottom:12px;">
+          <div class="section-title" style="margin:0;">🏆 Лидеры</div>
+          <button class="btn btn-dark" style="width:auto; padding:10px 14px;" onclick="loadLeaderboard()">Обновить</button>
         </div>
         <div id="leaderboard" class="list"></div>
       </div>
     </section>
 
-    <!-- ЭКРАН БОНУСОВ -->
+    <!-- БОНУСЫ -->
     <section id="screen-bonuses" class="screen">
       <div class="card">
         <div class="section-title">🎁 Бонусы</div>
-        <div class="muted" style="margin-bottom:14px;">
-          Здесь будут все награды, бонусы и специальные возможности игрока.
-        </div>
-
         <div class="list-item">
-          <div class="row-between">
-            <div>
-              <div style="font-weight:700; margin-bottom:4px;">Rescue Bonus</div>
-              <div class="muted">Доступен только когда баланс равен 0 и игра завершена.</div>
-            </div>
-          </div>
+          <div style="font-weight:800; margin-bottom:4px;">Rescue Bonus</div>
+          <div class="muted">Доступен только если баланс равен 0 и текущая игра завершена.</div>
           <div style="height:12px"></div>
-          <button id="rescueBtn" class="btn-gold" style="display:none;" onclick="rescueBonus()">
+
+          <button id="rescueBtn" class="btn btn-gold" style="display:none;" onclick="rescueBonus()">
             Получить +1000
           </button>
-          <div id="rescueHint" class="muted">Пока недоступно</div>
+
+          <div id="rescueHint" class="muted">Пока бонус недоступен</div>
         </div>
       </div>
     </section>
 
-    <!-- ЭКРАН ПРОФИЛЯ -->
+    <!-- ПРОФИЛЬ -->
     <section id="screen-profile" class="screen">
       <div class="card">
-        <div class="section-title">👤 Профиль игрока</div>
+        <div class="section-title">👤 Профиль</div>
         <div class="stats-grid">
           <div class="stat-box">
             <div class="stat-label">Имя</div>
-            <div id="profileName" class="stat-value" style="font-size:16px;">Игрок</div>
+            <div id="profileName" class="stat-value" style="font-size:15px;">Игрок</div>
           </div>
           <div class="stat-box">
             <div class="stat-label">Telegram ID</div>
-            <div id="profileId" class="stat-value" style="font-size:16px;">—</div>
+            <div id="profileId" class="stat-value" style="font-size:14px;">—</div>
           </div>
           <div class="stat-box">
             <div class="stat-label">Баланс</div>
@@ -462,17 +635,21 @@
       <div id="adminBox" class="card admin-box">
         <div class="section-title">🛠 Админ-панель</div>
         <div class="two-grid">
-          <input id="adminTargetId" type="text" placeholder="Telegram ID пользователя" />
-          <button class="btn-dark" onclick="adminLoadUser()">Найти</button>
+          <input id="adminTargetId" class="bet-input" type="text" placeholder="Telegram ID пользователя" />
+          <button class="btn btn-dark" onclick="adminLoadUser()">Найти</button>
         </div>
+
         <div style="height:10px"></div>
+
         <div class="two-grid">
-          <input id="adminAmount" type="number" placeholder="Сумма +/-" />
-          <button class="btn-green" onclick="adminChangeBalance()">Изменить баланс</button>
+          <input id="adminAmount" class="bet-input" type="number" placeholder="Сумма +/-" />
+          <button class="btn btn-green" onclick="adminChangeBalance()">Изменить баланс</button>
         </div>
+
         <div style="height:12px"></div>
+
         <div class="list-item">
-          <pre id="adminResult" class="muted"></pre>
+          <pre id="adminResult"></pre>
         </div>
       </div>
     </section>
@@ -480,10 +657,10 @@
 
   <div class="tabbar">
     <div class="tabbar-inner">
-      <button class="tab-btn active" data-screen="game" onclick="switchScreen('game', this)">🎮<br>Игра</button>
-      <button class="tab-btn" data-screen="leaders" onclick="switchScreen('leaders', this)">🏆<br>Лидеры</button>
-      <button class="tab-btn" data-screen="bonuses" onclick="switchScreen('bonuses', this)">🎁<br>Бонусы</button>
-      <button class="tab-btn" data-screen="profile" onclick="switchScreen('profile', this)">👤<br>Профиль</button>
+      <button class="tab-btn active" onclick="switchScreen('game', this)">🎮<br>Игра</button>
+      <button class="tab-btn" onclick="switchScreen('leaders', this)">🏆<br>Лидеры</button>
+      <button class="tab-btn" onclick="switchScreen('bonuses', this)">🎁<br>Бонусы</button>
+      <button class="tab-btn" onclick="switchScreen('profile', this)">👤<br>Профиль</button>
     </div>
   </div>
 
@@ -549,10 +726,6 @@
       return data;
     }
 
-    function setBet(value) {
-      document.getElementById("betInput").value = value;
-    }
-
     function renderCards(containerId, cards) {
       const el = document.getElementById(containerId);
       el.innerHTML = "";
@@ -583,7 +756,7 @@
         const div = document.createElement("div");
         div.className = "list-item";
         div.innerHTML = `
-          <div style="font-weight:700; margin-bottom:6px;">${escapeHtml(log.action)}</div>
+          <div style="font-weight:800; margin-bottom:6px;">${escapeHtml(log.action)}</div>
           <div class="muted" style="margin-bottom:6px;">${escapeHtml(log.status || "")}</div>
           <div class="muted">Ставка: ${log.bet} | Баланс: ${log.balance}</div>
           <div class="muted">Ты: ${(log.player_cards || []).join(" ")} (${log.player_score})</div>
@@ -608,10 +781,10 @@
         div.innerHTML = `
           <div class="row-between">
             <div>
-              <div style="font-weight:700;">#${index + 1}</div>
+              <div style="font-weight:800; margin-bottom:3px;">#${index + 1}</div>
               <div class="muted">${escapeHtml(user.telegram_id)}</div>
             </div>
-            <div style="font-weight:700;">💰 ${user.balance}</div>
+            <div style="font-weight:800;">💰 ${user.balance}</div>
           </div>
         `;
         box.appendChild(div);
