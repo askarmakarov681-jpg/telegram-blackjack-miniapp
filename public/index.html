@@ -140,13 +140,26 @@
 
     .status-bar {
       margin-bottom: 12px;
-      background: linear-gradient(180deg, rgba(20,26,35,0.92) 0%, rgba(14,19,26,0.96) 100%);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 11px 13px;
-      color: #dce5ed;
-      font-size: 13px;
-      box-shadow: var(--shadow);
+      background:
+      linear-gradient(180deg, rgba(25,33,44,0.96) 0%, rgba(15,20,28,0.98) 100%);
+        border: 1px solid rgba(245,196,81,0.16);
+        border-radius: 16px;
+        padding: 12px 14px;
+        color: #eef5ff;
+        font-size: 13px;
+      box-shadow:
+        0 8px 24px rgba(0,0,0,0.24),
+        inset 0 1px 0 rgba(255,255,255,0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .status-bar::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      background: linear-gradient(180deg, #ffd774 0%, #f0b940 100%);
     }
 
     .screen {
@@ -158,19 +171,23 @@
     }
 
     .card {
-      background: linear-gradient(180deg, rgba(20,26,35,0.96) 0%, rgba(13,18,26,0.98) 100%);
+      background:
+        linear-gradient(180deg, rgba(20, 26, 35, 0.96) 0%, rgba(11, 15, 22, 0.99) 100%);
       border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 14px;
+      border-radius: 20px;
+      box-shadow:
+        0 14px 34px rgba(0,0,0,0.28),
+        inset 0 1px 0 rgba(255,255,255,0.03);
+      padding: 15px;
       margin-bottom: 12px;
     }
 
     .section-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
       margin: 0 0 12px;
-      letter-spacing: 0.2px;
+      letter-spacing: 0.3px;
+      color: #f3f6fa;
     }
 
     .muted {
@@ -180,8 +197,9 @@
 
     .bet-row {
       display: grid;
-      grid-template-columns: 1fr 138px;
+      grid-template-columns: 1fr 146px;
       gap: 10px;
+      align-items: end;
     }
 
     .bet-input-wrap {
@@ -197,13 +215,45 @@
     .bet-input {
       width: 100%;
       border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.05);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%);
       color: #fff;
       border-radius: 14px;
       padding: 15px 16px;
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 17px;
+      font-weight: 800;
       outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .bet-card {
+      background:
+        linear-gradient(180deg, rgba(27,35,46,0.96) 0%, rgba(16,22,31,0.98) 100%);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.03),
+        0 10px 24px rgba(0,0,0,0.18);
+    }
+
+    .bet-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .bet-chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(245,196,81,0.12);
+      border: 1px solid rgba(245,196,81,0.18);
+      color: #ffd774;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
     }
 
     .btn {
@@ -227,18 +277,21 @@
     }
 
     .btn-green {
-      background: linear-gradient(180deg, #37dc82 0%, #25b567 100%);
-      color: #09130d;
+      background: linear-gradient(180deg, #45e28b 0%, #27b567 100%);
+      color: #08140d;
+      box-shadow: 0 10px 20px rgba(39,181,103,0.22);
     }
 
     .btn-blue {
-      background: linear-gradient(180deg, #4c92ff 0%, #2f73dd 100%);
+      background: linear-gradient(180deg, #58a0ff 0%, #3479e4 100%);
       color: #fff;
+      box-shadow: 0 10px 20px rgba(52,121,228,0.22);
     }
 
     .btn-red {
-      background: linear-gradient(180deg, #ff6666 0%, #dd3f3f 100%);
+      background: linear-gradient(180deg, #ff7272 0%, #df4343 100%);
       color: #fff;
+      box-shadow: 0 10px 20px rgba(223,67,67,0.20);
     }
 
     .btn-gold {
@@ -254,23 +307,24 @@
     .table-wrap {
       position: relative;
       overflow: hidden;
-      padding: 16px;
-      border-radius: 24px;
+      padding: 18px;
+      border-radius: 28px;
       background:
-        radial-gradient(circle at 50% 38%, rgba(62, 255, 145, 0.16) 0%, rgba(27, 122, 74, 0.12) 26%, transparent 58%),
-        radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 65%),
-        linear-gradient(180deg, #103023 0%, #0c2419 100%);
+        radial-gradient(circle at 50% 40%, rgba(61, 255, 150, 0.18) 0%, rgba(25, 145, 82, 0.10) 24%, transparent 58%),
+        radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 62%),
+        linear-gradient(180deg, #113222 0%, #0a1f15 100%);
       border: 1px solid rgba(255,255,255,0.06);
       box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.03),
-        inset 0 20px 40px rgba(255,255,255,0.02),
-        inset 0 -30px 50px rgba(0,0,0,0.22);
+        inset 0 24px 50px rgba(255,255,255,0.02),
+        inset 0 -40px 60px rgba(0,0,0,0.24),
+        0 14px 30px rgba(0,0,0,0.24);
     }
 
     .table-wrap::before {
       content: "";
       position: absolute;
-      inset: 10px;
+      inset: 12px;
       border: 1px solid rgba(255,255,255,0.05);
       border-radius: 999px;
       pointer-events: none;
@@ -280,16 +334,18 @@
       position: absolute;
       top: 14px;
       right: 14px;
-      background: rgba(0,0,0,0.24);
-      border: 1px solid rgba(255,255,255,0.06);
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.18) 100%);
+      border: 1px solid rgba(255,255,255,0.07);
       border-radius: 999px;
-      padding: 7px 10px;
+      padding: 7px 11px;
       font-size: 11px;
-      color: #dce6dd;
+      color: #edf7ef;
+      letter-spacing: 0.3px;
     }
 
     .hand-block + .hand-block {
-      margin-top: 22px;
+      margin-top: 28px;
     }
 
     .hand-head {
@@ -320,13 +376,14 @@
     }
 
     .score-pill {
-      background: rgba(0,0,0,0.22);
-      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.24);
+      border: 1px solid rgba(255,255,255,0.07);
       border-radius: 999px;
-      padding: 6px 10px;
+      padding: 6px 11px;
       font-size: 12px;
-      color: #ecf4ee;
+      color: #f1f7f2;
       white-space: nowrap;
+      font-weight: 700;
     }
 
     .cards {
@@ -338,11 +395,11 @@
     }
 
     .playing-card {
-      width: 58px;
-      height: 80px;
-      border-radius: 14px;
+      width: 60px;
+      height: 84px;
+      border-radius: 15px;
       background:
-        linear-gradient(180deg, #ffffff 0%, #e8edf2 100%);
+        linear-gradient(180deg, #ffffff 0%, #edf2f7 100%);
       color: #111827;
       display: flex;
       align-items: center;
@@ -350,9 +407,11 @@
       font-size: 22px;
       font-weight: 800;
       box-shadow:
-        0 10px 24px rgba(0,0,0,0.24),
-        inset 0 1px 0 rgba(255,255,255,0.8);
+        0 14px 28px rgba(0,0,0,0.26),
+        inset 0 1px 0 rgba(255,255,255,0.85),
+        inset 0 -1px 0 rgba(0,0,0,0.04);
       user-select: none;
+      border: 1px solid rgba(0,0,0,0.04);
     }
 
     .empty-cards {
@@ -364,7 +423,7 @@
     .action-row {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+      gap: 12px;
     }
 
     .two-grid {
@@ -465,6 +524,45 @@
       display: block;
     }
 
+    .game-accent-line {
+  height: 1px;
+  margin: 14px 0 10px;
+  background: linear-gradient(90deg, transparent 0%, rgba(245,196,81,0.28) 50%, transparent 100%);
+}
+
+    .status-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-inline::before {
+      content: "●";
+      color: #ffd774;
+      font-size: 10px;
+    }
+
+    .glow-label {
+    color: #ffd774;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 430px) {
+      .playing-card {
+       width: 56px;
+       height: 78px;
+       font-size: 20px;
+      }
+
+    .bet-row {
+      grid-template-columns: 1fr 128px;
+    }
+  }
+
     pre {
       margin: 0;
       white-space: pre-wrap;
@@ -519,59 +617,110 @@
       </div>
     </div>
 
-    <div id="status" class="status-bar">Загрузка...</div>
+    <div class="status-bar">
+      <div id="status" class="status-inline">Загрузка...</div>
+    </div>
 
     <!-- ИГРА -->
     <section id="screen-game" class="screen active">
       <div class="card">
-        <div class="section-title">Ставка</div>
-        <div class="bet-row">
-          <div class="bet-input-wrap">
-            <div class="bet-input-label">Введите сумму ставки</div>
-            <input id="betInput" class="bet-input" type="number" min="1" step="1" value="50" placeholder="Например 100" />
-          </div>
-          <div style="display:flex; align-items:end;">
-            <button class="btn btn-green" onclick="startGame()">Новая игра</button>
-          </div>
-        </div>
+  <div class="glow-label">Bet Control</div>
+  <div class="section-title">Ставка и начало игры</div>
+  <div class="bet-card">
+    <div class="bet-meta-row">
+      <div class="bet-input-label" style="margin:0;">Введите сумму ставки</div>
+      <div class="bet-chip">BLACKJACK</div>
+    </div>
+
+    <div class="bet-row">
+      <div class="bet-input-wrap">
+        <input
+          id="betInput"
+          class="bet-input"
+          type="number"
+          min="1"
+          step="1"
+          value="50"
+          placeholder="Например 100"
+        />
       </div>
+
+      <div style="display:flex; align-items:stretch;">
+        <button class="btn btn-green" onclick="startGame()">Новая игра</button>
+      </div>
+    </div>
+  </div>
+</div>
 
       <div class="card">
-        <div class="section-title">Игровой стол</div>
-        <div class="table-wrap">
-          <div class="deck-chip">Deck</div>
+  <div class="glow-label">Main Table</div>
+  <div class="section-title">Игровой стол</div>
+  <div class="table-wrap">
+    <div class="deck-chip">Deck</div>
 
-          <div class="hand-block">
-            <div class="hand-head">
-              <div class="hand-label-wrap">
-                <div class="hand-dot"></div>
-                <div class="hand-title">Дилер</div>
-              </div>
-              <div class="score-pill">Очки: <span id="dealerScore">0</span></div>
-            </div>
-            <div id="dealerCards" class="cards"></div>
-          </div>
-
-          <div class="hand-block">
-            <div class="hand-head">
-              <div class="hand-label-wrap">
-                <div class="hand-dot" style="background:#63e69a; box-shadow: 0 0 10px rgba(99,230,154,0.35);"></div>
-                <div class="hand-title">Игрок</div>
-              </div>
-              <div class="score-pill">Очки: <span id="playerScore">0</span></div>
-            </div>
-            <div id="playerCards" class="cards"></div>
-          </div>
+    <div class="hand-block">
+      <div class="hand-head">
+        <div class="hand-label-wrap">
+          <div class="hand-dot"></div>
+          <div class="hand-title">Дилер</div>
         </div>
+        <div class="score-pill">Очки: <span id="dealerScore">0</span></div>
       </div>
+      <div id="dealerCards" class="cards"></div>
+    </div>
+
+    <div class="game-accent-line"></div>
+
+    <div class="hand-block">
+      <div class="hand-head">
+        <div class="hand-label-wrap">
+          <div class="hand-dot" style="background:#63e69a; box-shadow: 0 0 10px rgba(99,230,154,0.35);"></div>
+          <div class="hand-title">Игрок</div>
+        </div>
+        <div class="score-pill">Очки: <span id="playerScore">0</span></div>
+      </div>
+      <div id="playerCards" class="cards"></div>
+    </div>
+  </div>
+</div>
+
+  <div class="deck-chip">Deck</div>
+
+  <div class="hand-block">
+    <div class="hand-head">
+      <div class="hand-label-wrap">
+        <div class="hand-dot"></div>
+        <div class="hand-title">Дилер</div>
+      </div>
+      <div class="score-pill">Очки: <span id="dealerScore">0</span></div>
+    </div>
+    <div id="dealerCards" class="cards"></div>
+  </div>
+
+  <div class="game-accent-line"></div>
+
+  <div class="hand-block">
+    <div class="hand-head">
+      <div class="hand-label-wrap">
+        <div class="hand-dot" style="background:#63e69a; box-shadow: 0 0 10px rgba(99,230,154,0.35);"></div>
+        <div class="hand-title">Игрок</div>
+      </div>
+      <div class="score-pill">Очки: <span id="playerScore">0</span></div>
+    </div>
+    <div id="playerCards" class="cards"></div>
+  </div>
+</div>
+
+
 
       <div class="card">
-        <div class="section-title">Действия</div>
-        <div class="action-row">
-          <button id="hitBtn" class="btn btn-blue" onclick="hit()">Взять</button>
-          <button id="standBtn" class="btn btn-red" onclick="stand()">Стоп</button>
-        </div>
-      </div>
+  <div class="glow-label">Player Actions</div>
+  <div class="section-title">Действия</div>
+  <div class="action-row">
+    <button id="hitBtn" class="btn btn-blue" onclick="hit()">Взять карту</button>
+    <button id="standBtn" class="btn btn-red" onclick="stand()">Остановиться</button>
+  </div>
+</div>
     </section>
 
     <!-- ЛИДЕРЫ -->
