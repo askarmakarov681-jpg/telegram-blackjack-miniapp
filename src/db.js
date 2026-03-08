@@ -1,135 +1,128 @@
-import pg from "pg";
+import pkg from "pg";
 import "dotenv/config";
 
-const { Pool } = pg;
+const { Pool } = pkg;
 
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: { rejectUnauthorized: false }
 });
 
 export async function initDb() {
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
-      telegram_id BIGINT UNIQUE NOT NULL,
+      telegram_id TEXT UNIQUE,
       username TEXT,
       first_name TEXT,
-      balance INTEGER NOT NULL DEFAULT 1000,
-      created_at TIMESTAMP NOT NULL DEFAULT NOW()
-    );
+      balance INTEGER DEFAULT 1000
+    )
   `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS game_logs (
       id SERIAL PRIMARY KEY,
-      telegram_id BIGINT NOT NULL,
-      action TEXT NOT NULL,
+      telegram_id TEXT,
+      action TEXT,
       status TEXT,
-      bet INTEGER DEFAULT 0,
-      balance INTEGER DEFAULT 0,
-      player_cards JSONB DEFAULT '[]'::jsonb,
-      dealer_cards JSONB DEFAULT '[]'::jsonb,
-      player_score INTEGER DEFAULT 0,
-      dealer_score INTEGER DEFAULT 0,
-      created_at TIMESTAMP NOT NULL DEFAULT NOW()
-    );
+      bet INTEGER,
+      balance INTEGER,
+      player_cards JSONB,
+      dealer_cards JSONB,
+      player_score INTEGER,
+      dealer_score INTEGER,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
   `);
 }
 
-export async function getOrCreateUser(telegramId, username, firstName) {
-  const existing = await pool.query(
-    `SELECT * FROM users WHERE telegram_id = $1`,
-    [telegramId]
+export async function getUserByTelegramId(id) {
+
+  const { rows } = await pool.query(
+    `SELECT * FROM users WHERE telegram_id=$1`,
+    [id]
   );
 
-  if (existing.rows.length > 0) {
-    return existing.rows[0];
-  }
+  return rows[0];
+}
 
-  const inserted = await pool.query(
-    `INSERT INTO users (telegram_id, username, first_name)
-     VALUES ($1, $2, $3)
+export async function getOrCreateUser(id, username, firstName) {
+
+  let user = await getUserByTelegramId(id);
+
+  if (user) return user;
+
+  const { rows } = await pool.query(
+    `INSERT INTO users (telegram_id,username,first_name)
+     VALUES ($1,$2,$3)
      RETURNING *`,
-    [telegramId, username || null, firstName || null]
+    [id, username, firstName]
   );
 
-  return inserted.rows[0];
+  return rows[0];
 }
 
-export async function getUserByTelegramId(telegramId) {
-  const result = await pool.query(
-    `SELECT * FROM users WHERE telegram_id = $1`,
-    [telegramId]
+export async function updateBalance(id, balance) {
+
+  const { rows } = await pool.query(
+    `UPDATE users SET balance=$1 WHERE telegram_id=$2 RETURNING *`,
+    [balance, id]
   );
 
-  return result.rows[0] || null;
+  return rows[0];
 }
 
-export async function updateBalance(telegramId, balance) {
-  const result = await pool.query(
-    `UPDATE users
-     SET balance = $2
-     WHERE telegram_id = $1
-     RETURNING *`,
-    [telegramId, balance]
+export async function changeBalance(id, amount) {
+
+  const { rows } = await pool.query(
+    `UPDATE users SET balance=balance+$1 WHERE telegram_id=$2 RETURNING *`,
+    [amount, id]
   );
 
-  return result.rows[0];
+  return rows[0];
 }
 
-export async function changeBalance(telegramId, amount) {
-  const result = await pool.query(
-    `UPDATE users
-     SET balance = balance + $2
-     WHERE telegram_id = $1
-     RETURNING *`,
-    [telegramId, amount]
-  );
+export async function addGameLog(data) {
 
-  return result.rows[0];
-}
-
-export async function addGameLog({
-  telegramId,
-  action,
-  status,
-  bet,
-  balance,
-  playerCards,
-  dealerCards,
-  playerScore,
-  dealerScore
-}) {
   await pool.query(
-    `INSERT INTO game_logs
-     (telegram_id, action, status, bet, balance, player_cards, dealer_cards, player_score, dealer_score)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-    [
-      telegramId,
+    `
+    INSERT INTO game_logs (
+      telegram_id,
       action,
-      status || null,
-      bet || 0,
-      balance || 0,
-      JSON.stringify(playerCards || []),
-      JSON.stringify(dealerCards || []),
-      playerScore || 0,
-      dealerScore || 0
+      status,
+      bet,
+      balance,
+      player_cards,
+      dealer_cards,
+      player_score,
+      dealer_score
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+    `,
+    [
+      data.telegramId,
+      data.action,
+      data.status,
+      data.bet,
+      data.balance,
+      JSON.stringify(data.playerCards),
+      JSON.stringify(data.dealerCards),
+      data.playerScore,
+      data.dealerScore
     ]
   );
 }
 
-export async function getUserLogs(telegramId, limit = 20) {
-  const result = await pool.query(
-    `SELECT *
-     FROM game_logs
-     WHERE telegram_id = $1
-     ORDER BY created_at DESC
-     LIMIT $2`,
-    [telegramId, limit]
+export async function getUserLogs(id) {
+
+  const { rows } = await pool.query(
+    `SELECT * FROM game_logs
+     WHERE telegram_id=$1
+     ORDER BY id DESC
+     LIMIT 20`,
+    [id]
   );
 
-  return result.rows;
+  return rows;
 }
