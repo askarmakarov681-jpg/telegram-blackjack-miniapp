@@ -197,6 +197,11 @@
       <div id="logs" class="log-list"></div>
     </div>
 
+    <div class="card">
+      <h3>🏆 Топ игроков</h3>
+      <div id="leaderboard"></div>
+    </div>
+
     <div id="adminBox" class="card admin-box">
       <h3>Админка</h3>
       <div class="controls">
@@ -238,10 +243,27 @@
 
     let currentState = null;
 
+    async function loadLeaderboard() {
+
+      const res = await fetch("/api/leaderboard");
+
+      const data = await res.json();
+
+      const box = document.getElementById("leaderboard");
+
+      box.innerHTML = data.map((u,i)=>
+        `<div>${i+1}. ${u.telegram_id} — ${u.balance}</div>`
+      ).join("");
+
+    }
+
     async function api(url, method = "GET", body = null) {
       const options = {
         method,
-        headers: { "Content-Type": "application/json" }
+        headers: {
+          "Content-Type": "application/json",
+          "x-telegram-init-data": tg.initData || ""
+        }
       };
 
       if (body) {
@@ -319,7 +341,7 @@
       document.getElementById("standBtn").disabled = state.gameOver;
       document.getElementById("rescueBtn").style.display = state.canRescueBonus ? "block" : "none";
 
-      const adminIds = [123456789];
+      const adminIds = [1011931325];
       if (adminIds.includes(Number(userId))) {
         document.getElementById("adminBox").classList.add("show");
       }
@@ -419,7 +441,8 @@
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
     }
-
+    
+    loadLeaderboard();
     loadState();
   </script>
 </body>
