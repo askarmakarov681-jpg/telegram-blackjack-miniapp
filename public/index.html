@@ -434,6 +434,7 @@
       gap: 8px;
       flex-wrap: wrap;
       align-items: flex-start;
+      position: relative;
     }
 
     .playing-card {
@@ -590,6 +591,19 @@
       transform: scale(0.96);
     }
 
+    .flying-card {
+      position: fixed;
+      width: 60px;
+      height: 84px;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 9999;
+      filter: drop-shadow(0 16px 26px rgba(0,0,0,0.34));
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      transform-origin: center center;
+    }
+
     @media (max-width: 430px) {
       .brand-title {
         font-size: 16px;
@@ -603,7 +617,8 @@
         grid-template-columns: 1fr 128px;
       }
 
-      .playing-card {
+      .playing-card,
+      .flying-card {
         width: 56px;
         height: 78px;
       }
@@ -621,11 +636,15 @@
     }
 
     @keyframes dealCard {
-      from {
+      0% {
         opacity: 0;
-        transform: translateY(18px) scale(0.94);
+        transform: translateY(16px) scale(0.96);
       }
-      to {
+      70% {
+        opacity: 1;
+        transform: translateY(-2px) scale(1.01);
+      }
+      100% {
         opacity: 1;
         transform: translateY(0) scale(1);
       }
@@ -651,6 +670,23 @@
         opacity: 1;
         transform: translateY(0);
       }
+    }
+
+    @keyframes flipReveal {
+      0% {
+        transform: rotateY(0deg) scale(1);
+      }
+      50% {
+        transform: rotateY(90deg) scale(1.02);
+      }
+      100% {
+        transform: rotateY(0deg) scale(1);
+      }
+    }
+
+    .flip-reveal {
+      animation: flipReveal 0.45s ease;
+      transform-style: preserve-3d;
     }
   </style>
 </head>
@@ -870,6 +906,7 @@
     document.getElementById("profileId").textContent = userId || "—";
 
     let currentState = null;
+    let pendingAnimationMode = "none"; // none | start | hit | stand
 
     function switchScreen(screenName, btnEl) {
       const screens = document.querySelectorAll(".screen");
@@ -960,7 +997,7 @@
       const raw = String(card).trim();
       if (!raw) return null;
 
-      if (raw === "BACK" || raw === "back" || raw === "hidden" || raw === "closed") {
+      if (raw === "BACK" || raw === "back" || raw === "hidden" || raw === "closed" || raw === "🂠") {
         return { back: true };
       }
 
@@ -1017,6 +1054,106 @@
       return `/assets/cards/${parsed.rank}_of_${parsed.suit}.svg`;
     }
 
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function getDeckStartPoint() {
+      const table = document.querySelector(".table-wrap");
+      if (!table) {
+        return { x: window.innerWidth - 90, y: 220 };
+      }
+
+      const rect = table.getBoundingClientRect();
+
+      return {
+        x: rect.right - 72,
+        y: rect.top + 24
+      };
+    }
+
+    function createCardImg(src, extraClass = "") {
+      const img = document.createElement("img");
+      img.className = `playing-card ${extraClass}`.trim();
+      img.src = src;
+      img.alt = "card";
+      img.loading = "eager";
+      img.draggable = false;
+      return img;
+    }
+
+    async function flyCardToTarget(src, targetContainer, insertIndex, options = {}) {
+      const {
+        extraClass = "",
+        hand = "player",
+        duration = 440,
+        fromBack = false
+      } = options;
+
+      const start = getDeckStartPoint();
+
+      const ghost = document.createElement("img");
+      ghost.className = `flying-card ${extraClass}`.trim();
+      ghost.src = src;
+      ghost.alt = "flying card";
+      ghost.draggable = false;
+
+      const isMobile = window.innerWidth <= 430;
+      const cardW = isMobile ? 56 : 60;
+      const cardH = isMobile ? 78 : 84;
+
+      ghost.style.left = `${start.x}px`;
+      ghost.style.top = `${start.y}px`;
+      ghost.style.opacity = "1";
+
+      const startRotate = hand === "dealer" ? -14 : 12;
+      const arcY = hand === "dealer" ? -14 : 14;
+
+      ghost.style.transform = `translate(0px, 0px) rotate(${startRotate}deg) scale(0.92)`;
+      document.body.appendChild(ghost);
+
+      const placeholder = document.createElement("div");
+      placeholder.style.width = `${cardW}px`;
+      placeholder.style.height = `${cardH}px`;
+      placeholder.style.opacity = "0";
+      placeholder.style.flex = `0 0 ${cardW}px`;
+
+      const children = targetContainer.children;
+      if (insertIndex >= children.length) {
+        targetContainer.appendChild(placeholder);
+      } else {
+        targetContainer.insertBefore(placeholder, children[insertIndex]);
+      }
+
+      const targetRect = placeholder.getBoundingClientRect();
+      const dx = targetRect.left - start.x;
+      const dy = targetRect.top - start.y + arcY;
+
+      await new Promise(resolve => {
+        requestAnimationFrame(() => {
+          ghost.style.transition =
+            `transform ${duration}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${duration}ms ease`;
+
+          ghost.style.transform =
+            `translate(${dx}px, ${dy}px) rotate(0deg) scale(1)`;
+
+          setTimeout(resolve, duration + 20);
+        });
+      });
+
+      const finalCard = createCardImg(src, extraClass);
+      finalCard.style.animationDelay = "0s";
+
+      placeholder.replaceWith(finalCard);
+      ghost.remove();
+
+      if (fromBack) {
+        finalCard.classList.add("flip-reveal");
+      }
+
+      return finalCard;
+    }
+
     function renderCards(containerId, cards, hideDealerSecondCard = false) {
       const el = document.getElementById(containerId);
       el.innerHTML = "";
@@ -1054,8 +1191,138 @@
         img.loading = "eager";
         img.draggable = false;
         img.style.animationDelay = `${0.04 + index * 0.08}s`;
+
+        if (index > 0) {
+          img.style.marginLeft = "-2px";
+        }
+
         el.appendChild(img);
       });
+    }
+
+    async function renderStartSequence(state) {
+      const playerEl = document.getElementById("playerCards");
+      const dealerEl = document.getElementById("dealerCards");
+
+      playerEl.innerHTML = "";
+      dealerEl.innerHTML = "";
+
+      const startSteps = [
+        {
+          handEl: playerEl,
+          card: state.player[0],
+          hidden: false,
+          hand: "player"
+        },
+        {
+          handEl: dealerEl,
+          card: state.dealer[0],
+          hidden: false,
+          hand: "dealer"
+        },
+        {
+          handEl: playerEl,
+          card: state.player[1],
+          hidden: false,
+          hand: "player"
+        },
+        {
+          handEl: dealerEl,
+          card: state.dealer[1],
+          hidden: !state.gameOver,
+          hand: "dealer"
+        }
+      ];
+
+      for (const step of startSteps) {
+        if (!step.card) continue;
+        const src = cardToAssetPath(step.card, step.hidden);
+        if (!src) continue;
+
+        await flyCardToTarget(src, step.handEl, step.handEl.children.length, {
+          extraClass: step.hidden ? "back-card" : "",
+          hand: step.hand,
+          duration: 430
+        });
+
+        await wait(130);
+      }
+
+      if (state.player.length > 2) {
+        for (let i = 2; i < state.player.length; i++) {
+          const src = cardToAssetPath(state.player[i], false);
+          if (!src) continue;
+
+          await flyCardToTarget(src, playerEl, playerEl.children.length, {
+            hand: "player",
+            duration: 400
+          });
+
+          await wait(120);
+        }
+      }
+
+      if (state.gameOver && state.dealer.length > 2) {
+        for (let i = 2; i < state.dealer.length; i++) {
+          const src = cardToAssetPath(state.dealer[i], false);
+          if (!src) continue;
+
+          await flyCardToTarget(src, dealerEl, dealerEl.children.length, {
+            hand: "dealer",
+            duration: 400
+          });
+
+          await wait(120);
+        }
+      }
+    }
+
+    async function renderHitSequence(state) {
+      const dealerEl = document.getElementById("dealerCards");
+      const playerEl = document.getElementById("playerCards");
+
+      renderCards("dealerCards", state.dealer, !state.gameOver);
+
+      const oldPlayerCount = playerEl.querySelectorAll(".playing-card").length;
+      const expectedOld = Math.max(0, state.player.length - 1);
+
+      if (oldPlayerCount !== expectedOld) {
+        renderCards("playerCards", state.player.slice(0, expectedOld), false);
+      }
+
+      const lastCard = state.player[state.player.length - 1];
+      const src = cardToAssetPath(lastCard, false);
+
+      if (!src) {
+        renderCards("playerCards", state.player, false);
+        return;
+      }
+
+      await flyCardToTarget(src, playerEl, expectedOld, {
+        hand: "player",
+        duration: 400
+      });
+    }
+
+    async function renderStandSequence(state) {
+      const playerEl = document.getElementById("playerCards");
+      const dealerEl = document.getElementById("dealerCards");
+
+      renderCards("playerCards", state.player, false);
+      dealerEl.innerHTML = "";
+
+      for (let i = 0; i < state.dealer.length; i++) {
+        const src = cardToAssetPath(state.dealer[i], false);
+        if (!src) continue;
+
+        await flyCardToTarget(src, dealerEl, dealerEl.children.length, {
+          hand: "dealer",
+          duration: i === 1 ? 460 : 410,
+          fromBack: i === 1
+        });
+
+        await wait(i === 1 ? 160 : 120);
+      }
     }
 
     function renderLogs(logs) {
@@ -1106,7 +1373,7 @@
       });
     }
 
-    function renderState(state) {
+    async function renderState(state) {
       currentState = state;
 
       console.log("PLAYER:", state.player);
@@ -1143,8 +1410,18 @@
         el.classList.add("flash");
       });
 
-      renderCards("playerCards", state.player, false);
-      renderCards("dealerCards", state.dealer, !state.gameOver);
+      if (pendingAnimationMode === "start") {
+        await renderStartSequence(state);
+      } else if (pendingAnimationMode === "hit") {
+        await renderHitSequence(state);
+      } else if (pendingAnimationMode === "stand") {
+        await renderStandSequence(state);
+      } else {
+        renderCards("playerCards", state.player, false);
+        renderCards("dealerCards", state.dealer, !state.gameOver);
+      }
+
+      pendingAnimationMode = "none";
       renderLogs(state.logs);
 
       document.getElementById("hitBtn").disabled = state.gameOver;
@@ -1172,7 +1449,7 @@
     async function loadState() {
       try {
         const data = await api(`/api/game/state?userId=${encodeURIComponent(userId)}`);
-        renderState(data);
+        await renderState(data);
       } catch (e) {
         alert(e.message);
       }
@@ -1189,7 +1466,8 @@
           bet
         });
 
-        renderState(data);
+        pendingAnimationMode = "start";
+        await renderState(data);
       } catch (e) {
         alert(e.message);
       }
@@ -1198,7 +1476,9 @@
     async function hit() {
       try {
         const data = await api("/api/game/hit", "POST", { userId });
-        renderState(data);
+
+        pendingAnimationMode = "hit";
+        await renderState(data);
       } catch (e) {
         alert(e.message);
       }
@@ -1207,7 +1487,9 @@
     async function stand() {
       try {
         const data = await api("/api/game/stand", "POST", { userId });
-        renderState(data);
+
+        pendingAnimationMode = "stand";
+        await renderState(data);
       } catch (e) {
         alert(e.message);
       }
@@ -1216,7 +1498,8 @@
     async function rescueBonus() {
       try {
         const data = await api("/api/bonus/rescue", "POST", { userId });
-        renderState(data);
+        pendingAnimationMode = "none";
+        await renderState(data);
       } catch (e) {
         alert(e.message);
       }
