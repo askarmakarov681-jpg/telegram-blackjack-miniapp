@@ -44,14 +44,33 @@
     .app {
       max-width: 560px;
       margin: 0 auto;
+      position: relative;
     }
 
     .screen {
       display: none;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      position: absolute;
+      width: calc(100% - 24px);
+      max-width: 560px;
     }
 
     .screen.active {
       display: block;
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      position: relative;
+      transition:
+        opacity 0.28s ease,
+        transform 0.28s ease;
+    }
+
+    .screen-transition-out {
+      opacity: 0 !important;
+      transform: translateY(8px) !important;
     }
 
     .topbar {
@@ -118,6 +137,11 @@
       padding: 10px 12px;
       min-width: 116px;
       justify-content: flex-end;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    .balance-pill.flash {
+      transform: scale(1.04);
     }
 
     .balance-icon {
@@ -169,6 +193,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      animation: statusPulseIn 0.25s ease;
     }
 
     .status-inline::before {
@@ -187,6 +212,7 @@
         inset 0 1px 0 rgba(255,255,255,0.03);
       padding: 15px;
       margin-bottom: 12px;
+      animation: fadeUp 0.35s ease;
     }
 
     .section-title {
@@ -219,6 +245,7 @@
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.03),
         0 10px 24px rgba(0,0,0,0.18);
+      animation: softIn 0.3s ease;
     }
 
     .bet-meta-row {
@@ -238,6 +265,11 @@
       font-size: 11px;
       font-weight: 700;
       white-space: nowrap;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    .bet-chip.flash {
+      transform: scale(1.04);
     }
 
     .bet-input-label {
@@ -274,11 +306,19 @@
       font-size: 15px;
       font-weight: 800;
       cursor: pointer;
-      transition: transform 0.08s ease, opacity 0.12s ease;
+      transition:
+        transform 0.1s ease,
+        box-shadow 0.18s ease,
+        opacity 0.18s ease,
+        filter 0.18s ease;
+    }
+
+    .btn:hover {
+      filter: brightness(1.03);
     }
 
     .btn:active {
-      transform: scale(0.985);
+      transform: scale(0.98);
     }
 
     .btn:disabled {
@@ -329,6 +369,7 @@
         inset 0 24px 50px rgba(255,255,255,0.02),
         inset 0 -40px 60px rgba(0,0,0,0.24),
         0 14px 30px rgba(0,0,0,0.24);
+      animation: softIn 0.3s ease;
     }
 
     .table-wrap::before {
@@ -380,10 +421,15 @@
       color: #f1f7f2;
       white-space: nowrap;
       font-weight: 700;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    .score-pill.flash {
+      transform: scale(1.04);
     }
 
     .cards {
-      min-height: 84px;
+      min-height: 92px;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
@@ -393,21 +439,19 @@
     .playing-card {
       width: 60px;
       height: 84px;
-      border-radius: 15px;
-      background:
-        linear-gradient(180deg, #ffffff 0%, #edf2f7 100%);
-      color: #111827;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      font-weight: 800;
-      box-shadow:
-        0 14px 28px rgba(0,0,0,0.26),
-        inset 0 1px 0 rgba(255,255,255,0.85),
-        inset 0 -1px 0 rgba(0,0,0,0.04);
+      display: block;
+      object-fit: contain;
       user-select: none;
-      border: 1px solid rgba(0,0,0,0.04);
+      pointer-events: none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.28));
+      opacity: 0;
+      transform: translateY(16px) scale(0.96);
+      animation: dealCard 0.35s ease forwards;
+      transform-origin: center center;
+    }
+
+    .playing-card.back-card {
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.30));
     }
 
     .empty-cards {
@@ -445,6 +489,7 @@
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
+      animation: softIn 0.3s ease;
     }
 
     .row-between {
@@ -465,6 +510,7 @@
       border: 1px solid var(--line);
       border-radius: 15px;
       padding: 13px;
+      animation: softIn 0.3s ease;
     }
 
     .stat-label {
@@ -527,12 +573,21 @@
       line-height: 1.2;
       text-align: center;
       cursor: pointer;
+      transition:
+        transform 0.12s ease,
+        background 0.18s ease,
+        color 0.18s ease,
+        box-shadow 0.18s ease;
     }
 
     .tab-btn.active {
       background: linear-gradient(180deg, rgba(49,63,79,0.96) 0%, rgba(31,40,50,0.98) 100%);
       color: #fff;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+    }
+
+    .tab-btn:active {
+      transform: scale(0.96);
     }
 
     @media (max-width: 430px) {
@@ -551,160 +606,57 @@
       .playing-card {
         width: 56px;
         height: 78px;
-        font-size: 20px;
       }
     }
 
-    .screen {
-  opacity: 0;
-  transform: translateY(10px);
-  pointer-events: none;
-  position: absolute;
-  width: calc(100% - 24px);
-  max-width: 560px;
-}
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-.screen.active {
-  display: block;
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-  position: relative;
-  transition:
-    opacity 0.28s ease,
-    transform 0.28s ease;
-}
+    @keyframes dealCard {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.94);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
 
-.app {
-  position: relative;
-}
+    @keyframes statusPulseIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-.card {
-  animation: fadeUp 0.35s ease;
-}
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.playing-card {
-  opacity: 0;
-  transform: translateY(16px) scale(0.96);
-  animation: dealCard 0.35s ease forwards;
-}
-
-.playing-card:nth-child(1) { animation-delay: 0.02s; }
-.playing-card:nth-child(2) { animation-delay: 0.07s; }
-.playing-card:nth-child(3) { animation-delay: 0.12s; }
-.playing-card:nth-child(4) { animation-delay: 0.17s; }
-.playing-card:nth-child(5) { animation-delay: 0.22s; }
-.playing-card:nth-child(6) { animation-delay: 0.27s; }
-
-@keyframes dealCard {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(0.94);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.status-inline {
-  animation: statusPulseIn 0.25s ease;
-}
-
-@keyframes statusPulseIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.tab-btn {
-  transition:
-    transform 0.12s ease,
-    background 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.tab-btn:active {
-  transform: scale(0.96);
-}
-
-.btn {
-  transition:
-    transform 0.1s ease,
-    box-shadow 0.18s ease,
-    opacity 0.18s ease,
-    filter 0.18s ease;
-}
-
-.btn:hover {
-  filter: brightness(1.03);
-}
-
-.btn:active {
-  transform: scale(0.98);
-}
-
-.list-item,
-.stat-box,
-.bet-card,
-.table-wrap {
-  animation: softIn 0.3s ease;
-}
-
-@keyframes softIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.screen-transition-out {
-  opacity: 0 !important;
-  transform: translateY(8px) !important;
-}
-
-.score-pill,
-.balance-pill,
-.bet-chip {
-  transition:
-    transform 0.18s ease,
-    opacity 0.18s ease;
-}
-
-.score-pill.flash,
-.balance-pill.flash,
-.bet-chip.flash {
-  transform: scale(1.04);
-}
-
+    @keyframes softIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
-
 </head>
 <body>
   <div class="app">
 
-    <!-- ИГРА -->
     <section id="screen-game" class="screen active">
       <div class="topbar">
         <div class="topbar-left">
@@ -748,7 +700,6 @@
               value="50"
               placeholder="Например 100"
             />
-
             <button class="btn btn-green" onclick="startGame()">Новая игра</button>
           </div>
         </div>
@@ -796,7 +747,6 @@
       </div>
     </section>
 
-    <!-- ЛИДЕРЫ -->
     <section id="screen-leaders" class="screen">
       <div class="card">
         <div class="row-between" style="margin-bottom:12px;">
@@ -807,7 +757,6 @@
       </div>
     </section>
 
-    <!-- БОНУСЫ -->
     <section id="screen-bonuses" class="screen">
       <div class="card">
         <div class="section-title">🎁 Бонусы</div>
@@ -827,7 +776,6 @@
       </div>
     </section>
 
-    <!-- ПРОФИЛЬ -->
     <section id="screen-profile" class="screen">
       <div class="card">
         <div class="section-title">👤 Профиль</div>
@@ -924,35 +872,35 @@
     let currentState = null;
 
     function switchScreen(screenName, btnEl) {
-  const screens = document.querySelectorAll(".screen");
-  const tabs = document.querySelectorAll(".tab-btn");
-  const nextScreen = document.getElementById(`screen-${screenName}`);
+      const screens = document.querySelectorAll(".screen");
+      const tabs = document.querySelectorAll(".tab-btn");
+      const nextScreen = document.getElementById(`screen-${screenName}`);
 
-  screens.forEach(el => {
-    if (el.classList.contains("active")) {
-      el.classList.add("screen-transition-out");
+      screens.forEach(el => {
+        if (el.classList.contains("active")) {
+          el.classList.add("screen-transition-out");
+          setTimeout(() => {
+            el.classList.remove("active");
+            el.classList.remove("screen-transition-out");
+          }, 180);
+        } else {
+          el.classList.remove("active");
+          el.classList.remove("screen-transition-out");
+        }
+      });
+
+      tabs.forEach(el => el.classList.remove("active"));
+
       setTimeout(() => {
-        el.classList.remove("active");
-        el.classList.remove("screen-transition-out");
-      }, 180);
-    } else {
-      el.classList.remove("active");
-      el.classList.remove("screen-transition-out");
+        nextScreen.classList.add("active");
+      }, 120);
+
+      if (btnEl) btnEl.classList.add("active");
+
+      if (screenName === "leaders") {
+        loadLeaderboard();
+      }
     }
-  });
-
-  tabs.forEach(el => el.classList.remove("active"));
-
-  setTimeout(() => {
-    nextScreen.classList.add("active");
-  }, 120);
-
-  if (btnEl) btnEl.classList.add("active");
-
-  if (screenName === "leaders") {
-    loadLeaderboard();
-  }
-}
 
     async function api(url, method = "GET", body = null) {
       const options = {
@@ -974,23 +922,141 @@
       return data;
     }
 
-    function renderCards(containerId, cards) {
-  const el = document.getElementById(containerId);
-  el.innerHTML = "";
+    function normalizeSuit(suitRaw) {
+      const s = String(suitRaw || "").trim().toLowerCase();
 
-  if (!cards || !cards.length) {
-    el.innerHTML = `<div class="empty-cards">Нет карт</div>`;
-    return;
-  }
+      if (s === "♠" || s === "s" || s === "spade" || s === "spades") return "spades";
+      if (s === "♥" || s === "h" || s === "heart" || s === "hearts") return "hearts";
+      if (s === "♦" || s === "d" || s === "diamond" || s === "diamonds") return "diamonds";
+      if (s === "♣" || s === "c" || s === "club" || s === "clubs") return "clubs";
 
-  cards.forEach((card, index) => {
-    const div = document.createElement("div");
-    div.className = "playing-card";
-    div.textContent = card;
-    div.style.animationDelay = `${0.04 + index * 0.06}s`;
-    el.appendChild(div);
-  });
-}
+      return null;
+    }
+
+    function normalizeRank(rankRaw) {
+      const r = String(rankRaw || "").trim().toLowerCase();
+
+      if (r === "a" || r === "ace" || r === "туз") return "ace";
+      if (r === "k" || r === "king" || r === "король") return "king";
+      if (r === "q" || r === "queen" || r === "дама") return "queen";
+      if (r === "j" || r === "jack" || r === "валет") return "jack";
+
+      if (["2", "3", "4", "5", "6", "7", "8", "9", "10"].includes(r)) return r;
+
+      return null;
+    }
+
+    function parseCard(card) {
+      if (!card) return null;
+
+      if (typeof card === "object") {
+        const rank = normalizeRank(card.rank || card.value || card.r);
+        const suit = normalizeSuit(card.suit || card.s || card.symbol);
+        if (rank && suit) {
+          return { rank, suit };
+        }
+      }
+
+      const raw = String(card).trim();
+      if (!raw) return null;
+
+      if (raw === "BACK" || raw === "back" || raw === "hidden" || raw === "closed") {
+        return { back: true };
+      }
+
+      const lower = raw.toLowerCase();
+
+      if (lower.includes("_of_")) {
+        const cleaned = lower.replace(".svg", "").trim();
+        const parts = cleaned.split("_of_");
+        const rank = normalizeRank(parts[0]);
+        const suit = normalizeSuit(parts[1]);
+        if (rank && suit) {
+          return { rank, suit };
+        }
+      }
+
+      const unicodeMatch = raw.match(/^(10|[2-9AJQKajqk])\s*([♠♥♦♣])$/);
+      if (unicodeMatch) {
+        const rank = normalizeRank(unicodeMatch[1]);
+        const suit = normalizeSuit(unicodeMatch[2]);
+        if (rank && suit) {
+          return { rank, suit };
+        }
+      }
+
+      const shortMatch = raw.match(/^(10|[2-9AJQKajqk])\s*([shdcSHDC])$/);
+      if (shortMatch) {
+        const rank = normalizeRank(shortMatch[1]);
+        const suit = normalizeSuit(shortMatch[2]);
+        if (rank && suit) {
+          return { rank, suit };
+        }
+      }
+
+      const wordsMatch = lower.match(/^(ace|king|queen|jack|10|[2-9])[\s_-]+(spades|hearts|diamonds|clubs)$/);
+      if (wordsMatch) {
+        const rank = normalizeRank(wordsMatch[1]);
+        const suit = normalizeSuit(wordsMatch[2]);
+        if (rank && suit) {
+          return { rank, suit };
+        }
+      }
+
+      return null;
+    }
+
+    function cardToAssetPath(card, hidden = false) {
+      if (hidden) return "/assets/cards/back.svg";
+
+      const parsed = parseCard(card);
+      if (!parsed) return null;
+
+      if (parsed.back) return "/assets/cards/back.svg";
+
+      return `/assets/cards/${parsed.rank}_of_${parsed.suit}.svg`;
+    }
+
+    function renderCards(containerId, cards, hideDealerSecondCard = false) {
+      const el = document.getElementById(containerId);
+      el.innerHTML = "";
+
+      if (!cards || !cards.length) {
+        el.innerHTML = `<div class="empty-cards">Нет карт</div>`;
+        return;
+      }
+
+      cards.forEach((card, index) => {
+        const shouldHide = hideDealerSecondCard && index === 1;
+        const src = cardToAssetPath(card, shouldHide);
+
+        if (!src) {
+          const fallback = document.createElement("div");
+          fallback.className = "playing-card";
+          fallback.style.display = "flex";
+          fallback.style.alignItems = "center";
+          fallback.style.justifyContent = "center";
+          fallback.style.background = "#fff";
+          fallback.style.borderRadius = "12px";
+          fallback.style.color = "#111";
+          fallback.style.fontWeight = "800";
+          fallback.style.fontSize = "18px";
+          fallback.textContent = String(card);
+          fallback.style.animationDelay = `${0.04 + index * 0.08}s`;
+          el.appendChild(fallback);
+          return;
+        }
+
+        const img = document.createElement("img");
+        img.className = "playing-card" + (shouldHide ? " back-card" : "");
+        img.src = src;
+        img.alt = shouldHide ? "Hidden card" : String(card);
+        img.loading = "eager";
+        img.draggable = false;
+        img.style.animationDelay = `${0.04 + index * 0.08}s`;
+        el.appendChild(img);
+      });
+    }
 
     function renderLogs(logs) {
       const box = document.getElementById("logs");
@@ -1041,64 +1107,67 @@
     }
 
     function renderState(state) {
-  currentState = state;
+      currentState = state;
 
-  const balanceEl = document.getElementById("balance");
-  const balancePill = document.querySelector(".balance-pill");
-  const statusEl = document.getElementById("status");
-  const dealerScoreEl = document.getElementById("dealerScore");
-  const playerScoreEl = document.getElementById("playerScore");
-  const profileBalanceEl = document.getElementById("profileBalance");
-  const profileLogsCountEl = document.getElementById("profileLogsCount");
+      console.log("PLAYER:", state.player);
+      console.log("DEALER:", state.dealer);
 
-  balanceEl.textContent = state.balance;
-  profileBalanceEl.textContent = state.balance;
-  profileLogsCountEl.textContent = (state.logs || []).length;
+      const balanceEl = document.getElementById("balance");
+      const balancePill = document.querySelector(".balance-pill");
+      const statusEl = document.getElementById("status");
+      const dealerScoreEl = document.getElementById("dealerScore");
+      const playerScoreEl = document.getElementById("playerScore");
+      const profileBalanceEl = document.getElementById("profileBalance");
+      const profileLogsCountEl = document.getElementById("profileLogsCount");
 
-  statusEl.classList.remove("status-inline");
-  void statusEl.offsetWidth;
-  statusEl.textContent = state.status;
-  statusEl.classList.add("status-inline");
+      balanceEl.textContent = state.balance;
+      profileBalanceEl.textContent = state.balance;
+      profileLogsCountEl.textContent = (state.logs || []).length;
 
-  dealerScoreEl.textContent = state.dealerScore;
-  playerScoreEl.textContent = state.playerScore;
-  document.getElementById("betInput").value = state.bet;
+      statusEl.classList.remove("status-inline");
+      void statusEl.offsetWidth;
+      statusEl.textContent = state.status;
+      statusEl.classList.add("status-inline");
 
-  balancePill.classList.remove("flash");
-  void balancePill.offsetWidth;
-  balancePill.classList.add("flash");
+      dealerScoreEl.textContent = state.dealerScore;
+      playerScoreEl.textContent = state.playerScore;
+      document.getElementById("betInput").value = state.bet;
 
-  document.querySelectorAll(".score-pill").forEach(el => {
-    el.classList.remove("flash");
-    void el.offsetWidth;
-    el.classList.add("flash");
-  });
+      balancePill.classList.remove("flash");
+      void balancePill.offsetWidth;
+      balancePill.classList.add("flash");
 
-  renderCards("playerCards", state.player);
-  renderCards("dealerCards", state.dealer);
-  renderLogs(state.logs);
+      document.querySelectorAll(".score-pill").forEach(el => {
+        el.classList.remove("flash");
+        void el.offsetWidth;
+        el.classList.add("flash");
+      });
 
-  document.getElementById("hitBtn").disabled = state.gameOver;
-  document.getElementById("standBtn").disabled = state.gameOver;
+      renderCards("playerCards", state.player, false);
+      renderCards("dealerCards", state.dealer, !state.gameOver);
+      renderLogs(state.logs);
 
-  const rescueBtn = document.getElementById("rescueBtn");
-  const rescueHint = document.getElementById("rescueHint");
+      document.getElementById("hitBtn").disabled = state.gameOver;
+      document.getElementById("standBtn").disabled = state.gameOver;
 
-  if (state.canRescueBonus) {
-    rescueBtn.style.display = "block";
-    rescueHint.style.display = "none";
-  } else {
-    rescueBtn.style.display = "none";
-    rescueHint.style.display = "block";
-  }
+      const rescueBtn = document.getElementById("rescueBtn");
+      const rescueHint = document.getElementById("rescueHint");
 
-  const adminIds = [1011931325];
-  if (adminIds.includes(Number(userId))) {
-    document.getElementById("adminBox").classList.add("show");
-  } else {
-    document.getElementById("adminBox").classList.remove("show");
-  }
-}
+      if (state.canRescueBonus) {
+        rescueBtn.style.display = "block";
+        rescueHint.style.display = "none";
+      } else {
+        rescueBtn.style.display = "none";
+        rescueHint.style.display = "block";
+      }
+
+      const adminIds = [1011931325];
+      if (adminIds.includes(Number(userId))) {
+        document.getElementById("adminBox").classList.add("show");
+      } else {
+        document.getElementById("adminBox").classList.remove("show");
+      }
+    }
 
     async function loadState() {
       try {
@@ -1187,18 +1256,18 @@
     }
 
     async function loadLeaderboard() {
-  try {
-    const box = document.getElementById("leaderboard");
-    box.innerHTML = `<div class="list-item muted">Загрузка...</div>`;
+      try {
+        const box = document.getElementById("leaderboard");
+        box.innerHTML = `<div class="list-item muted">Загрузка...</div>`;
 
-    const res = await fetch("/api/leaderboard");
-    const data = await res.json();
-    renderLeaderboard(data);
-  } catch (e) {
-    document.getElementById("leaderboard").innerHTML =
-      `<div class="list-item muted">Не удалось загрузить лидеров</div>`;
-  }
-}
+        const res = await fetch("/api/leaderboard");
+        const data = await res.json();
+        renderLeaderboard(data);
+      } catch (e) {
+        document.getElementById("leaderboard").innerHTML =
+          `<div class="list-item muted">Не удалось загрузить лидеров</div>`;
+      }
+    }
 
     function escapeHtml(str) {
       return String(str)
